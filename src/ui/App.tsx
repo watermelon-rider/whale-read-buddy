@@ -18,11 +18,14 @@ export function App() {
   // 启动：定位当前标签页，打开（或创建）其 origin 的最近会话。
   useEffect(() => {
     void (async () => {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      // 并行：取当前标签页与最近会话互不依赖。
+      const [tabs, last] = await Promise.all([
+        chrome.tabs.query({ active: true, currentWindow: true }),
+        request<ConversationMeta | null>({ kind: 'getLastConversation' }),
+      ]);
+      const tab = tabs[0];
       if (!tab?.id || !tab.url) return;
       setCurrentUrl(tab.url);
-      // 优先恢复最近活跃的会话（用户上次离开时的位置）；没有再按站点打开。
-      const last = await request<ConversationMeta | null>({ kind: 'getLastConversation' });
       if (last) {
         setConversation(last);
         return;

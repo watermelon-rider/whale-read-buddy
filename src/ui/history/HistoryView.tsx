@@ -17,6 +17,7 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
   const [items, setItems] = useState<ConversationMeta[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const saveTitle = async (id: string) => {
     await request({ kind: 'renameConversation', conversationId: id, title: editTitle });
@@ -31,6 +32,16 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
   useEffect(() => {
     void reload();
   }, []);
+
+  // 点击其他位置关闭删除确认气泡。
+  useEffect(() => {
+    if (confirmDeleteId === null) return;
+    const onDown = (e: globalThis.MouseEvent) => {
+      if (!(e.target as HTMLElement).closest('.dr-confirm-pop')) setConfirmDeleteId(null);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [confirmDeleteId]);
 
   const groups = useMemo(() => {
     const map = new Map<string, ConversationMeta[]>();
@@ -115,15 +126,36 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
                       <button
                         className="dr-icon-btn"
                         title="删除会话"
-                        onClick={async (e) => {
+                        onClick={(e) => {
                           e.stopPropagation();
-                          await request({ kind: 'deleteConversation', conversationId: c.id });
-                          await reload();
+                          setConfirmDeleteId(c.id);
                         }}
                       >
                         <X size={14} strokeWidth={1.8} />
                       </button>
                     </span>
+                    {confirmDeleteId === c.id && (
+                      <div
+                        className="dr-confirm-pop"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="dr-confirm-text">删除这个会话？聊天记录将一并清除。</div>
+                        <div className="dr-confirm-row">
+                          <button
+                            className="dr-icon-btn"
+                            onClick={() => setConfirmDeleteId(null)}
+                          >
+                            取消
+                          </button>
+                          <button
+                            className="dr-primary-btn dr-danger-btn"
+                            onClick={() => void doDelete(c.id)}
+                          >
+                            删除
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -135,3 +167,9 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
     </div>
   );
 }
+  const doDelete = async (id: string) => {
+    await request({ kind: 'deleteConversation', conversationId: id });
+    setConfirmDeleteId(null);
+    await reload();
+  };
+

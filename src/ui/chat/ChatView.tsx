@@ -47,25 +47,21 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const snapshot = await request<PanelSnapshot>({ kind: 'loadHistory', conversationId: conversation.id });
+      // 三个独立请求并行，缩短首屏。
+      const [snapshot, settings, convPrompt] = await Promise.all([
+        request<PanelSnapshot>({ kind: 'loadHistory', conversationId: conversation.id }),
+        request<Settings>({ kind: 'getSettings' }),
+        request<string>({ kind: 'getConversationInstruction', conversationId: conversation.id }),
+      ]);
       if (cancelled) return;
       setEvents(snapshot.events);
       setQuestion(snapshot.draft.question);
       setAnnotations(snapshot.draft.annotations);
-      const settings = await request<Settings>({ kind: 'getSettings' });
-      if (!cancelled) {
-        setModelChoice({ model: settings.model, reasoningEffort: settings.reasoningEffort });
-      }
-      const convPrompt = await request<string>({
-        kind: 'getConversationInstruction',
-        conversationId: conversation.id,
-      });
-      if (!cancelled) {
-        setRedactSources([settings.persona, settings.globalInstructions, convPrompt]);
-      }
+      setModelChoice({ model: settings.model, reasoningEffort: settings.reasoningEffort });
+      setRedactSources([settings.persona, settings.globalInstructions, convPrompt]);
       // 未发送页面批注的高亮恢复。
       if (snapshot.draft.annotations.some((a) => a.source.kind === 'page')) {
-        await request({ kind: 'restoreHighlights', conversationId: conversation.id });
+        void request({ kind: 'restoreHighlights', conversationId: conversation.id });
       }
     })();
     return () => {
