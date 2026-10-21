@@ -49,60 +49,72 @@ export function SettingsView({ currentOrigin, onBack }: Props) {
         <span />
       </header>
       <div className="dr-settings-body">
-        <label className="dr-field">
-          <span>DeepSeek API Key（仅存本地，不会同步到云端）</span>
-          <input
-            type="password"
-            value={settings.apiKey}
-            onChange={(e) => patch({ apiKey: e.target.value.trim() })}
-            placeholder="sk-…"
-          />
-        </label>
-        <label className="dr-field">
-          <span>API 基址（兼容代理/网关）</span>
-          <input value={settings.baseURL} onChange={(e) => patch({ baseURL: e.target.value })} />
-        </label>
-        <label className="dr-field">
-          <span>Search / Fetch 工具端点</span>
-          <input
-            value={settings.toolsBaseURL}
-            onChange={(e) => patch({ toolsBaseURL: e.target.value })}
-          />
-        </label>
-        <label className="dr-field">
-          <span>陪读人设（persona，留空用默认）</span>
-          <textarea
-            rows={3}
-            value={settings.persona}
-            placeholder="例：你是我的经济学导师，解释概念时结合实例。"
-            onChange={(e) => patch({ persona: e.target.value })}
-          />
-        </label>
-        <label className="dr-field">
-          <span>全局阅读指令（对所有站点生效）</span>
-          <textarea
-            rows={3}
-            value={settings.globalInstructions}
-            placeholder="例：回答时先给结论，再展开论证。"
-            onChange={(e) => patch({ globalInstructions: e.target.value })}
-          />
-        </label>
-        <label className="dr-field">
-          <span>站点指令（仅 {currentOrigin}）</span>
-          <textarea
-            rows={3}
-            value={siteInstruction}
-            placeholder="例：知乎的回答先关注赞同数与评论区争议。"
-            onChange={(e) => {
-              setSiteInstruction(e.target.value);
-              setSaved(false);
-            }}
-          />
-        </label>
-        <button className="dr-primary-btn dr-save-btn" onClick={() => void save()}>
-          {saved && <Check size={14} strokeWidth={2} />}
-          {saved ? '已保存' : '保存'}
-        </button>
+        <div className="dr-settings-section">
+          <div className="dr-settings-heading">账号与端点</div>
+          <div className="dr-settings-card">
+            <label className="dr-field">
+              <span>DeepSeek API Key · 仅存本地，不会同步到云端</span>
+              <input
+                type="password"
+                value={settings.apiKey}
+                onChange={(e) => patch({ apiKey: e.target.value.trim() })}
+                placeholder="sk-…"
+              />
+            </label>
+            <label className="dr-field">
+              <span>API 基址（兼容代理/网关）</span>
+              <input value={settings.baseURL} onChange={(e) => patch({ baseURL: e.target.value })} />
+            </label>
+            <label className="dr-field dr-field-last">
+              <span>Search / Fetch 工具端点</span>
+              <input
+                value={settings.toolsBaseURL}
+                onChange={(e) => patch({ toolsBaseURL: e.target.value })}
+              />
+            </label>
+          </div>
+        </div>
+        <div className="dr-settings-section">
+          <div className="dr-settings-heading">人设与指令</div>
+          <div className="dr-settings-card">
+            <label className="dr-field">
+              <span>陪读人设（留空用默认）</span>
+              <textarea
+                rows={4}
+                value={settings.persona}
+                placeholder="留空则使用默认人设"
+                onChange={(e) => patch({ persona: e.target.value })}
+              />
+            </label>
+            <label className="dr-field">
+              <span>全局阅读指令（对所有站点生效）</span>
+              <textarea
+                rows={3}
+                value={settings.globalInstructions}
+                placeholder="例：回答时先给结论，再展开论证。"
+                onChange={(e) => patch({ globalInstructions: e.target.value })}
+              />
+            </label>
+            <label className="dr-field dr-field-last">
+              <span>站点指令（仅 {currentOrigin}）</span>
+              <textarea
+                rows={3}
+                value={siteInstruction}
+                placeholder="例：知乎的回答先关注赞同数与评论区争议。"
+                onChange={(e) => {
+                  setSiteInstruction(e.target.value);
+                  setSaved(false);
+                }}
+              />
+            </label>
+          </div>
+        </div>
+        <div className="dr-settings-footer">
+          <button className="dr-primary-btn dr-save-btn" onClick={() => void save()}>
+            {saved && <Check size={14} strokeWidth={2} />}
+            {saved ? '已保存' : '保存'}
+          </button>
+        </div>
       </div>
     </div>
   );

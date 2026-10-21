@@ -138,7 +138,7 @@
 }
 
 .dr-reasoning {
-  margin-bottom: 4px;
+  margin: 6px 0;
 }
 
 .dr-reasoning-toggle {
@@ -175,7 +175,7 @@
   gap: 6px;
   font-size: 12px;
   color: var(--dr-text-secondary);
-  margin: 6px 0;
+  margin: 6px 0 6px 3px;
 }
 
 /* lucide 图标在按钮里垂直居中 */
@@ -293,6 +293,15 @@
   border-radius: 6px;
   padding: 3px 6px;
   font-size: 12px;
+}
+
+.dr-anno-edit-area {
+  width: 100%;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+  max-height: 66px;
+  overflow-y: auto;
 }
 
 .dr-anno-del {
@@ -621,23 +630,64 @@
   color: var(--dr-text-secondary);
 }
 
+.dr-settings-section {
+  margin-bottom: 18px;
+}
+
+.dr-settings-heading {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dr-text-secondary);
+  margin: 0 0 6px 4px;
+}
+
+.dr-settings-card {
+  background: #fff;
+  border: 1px solid var(--dr-border);
+  border-radius: 14px;
+  padding: 4px 14px;
+}
+
 .dr-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin-bottom: 12px;
+  padding: 10px 0;
   font-size: 13px;
+  border-bottom: 1px solid var(--dr-border);
+}
+
+.dr-field-last {
+  border-bottom: none;
+}
+
+.dr-field > span {
+  font-size: 12px;
+  color: var(--dr-text-secondary);
 }
 
 .dr-field input,
 .dr-field select,
 .dr-field textarea {
-  border: 1px solid var(--dr-border);
+  border: none;
+  outline: none;
   border-radius: 8px;
-  padding: 6px 8px;
+  padding: 7px 10px;
   font-family: inherit;
   font-size: 13px;
-  background: #fff;
+  background: #f7f7f8;
+  color: var(--dr-text);
+}
+
+.dr-field input:focus,
+.dr-field textarea:focus {
+  box-shadow: 0 0 0 2px var(--dr-accent-soft);
+}
+
+.dr-settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 8px;
 }
 
 .dr-field-inline {

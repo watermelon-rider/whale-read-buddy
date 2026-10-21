@@ -169,6 +169,7 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
         </button>
       </header>
       <MessageList
+        conversationId={conversation.id}
         events={events}
         streaming={streaming}
         onAnnotateSelection={addAnnotation}

@@ -135,18 +135,35 @@ export function Composer(props: Props) {
                       </div>
                       <div className="dr-anno-note-row">
                         {editingIndex === a.index ? (
-                          <input
+                          <textarea
                             autoFocus
-                            className="dr-anno-edit"
+                            className="dr-anno-edit dr-anno-edit-area"
                             value={editNote}
                             placeholder="写点批注…"
-                            onChange={(e) => setEditNote(e.target.value)}
+                            rows={1}
+                            ref={(el) => {
+                              if (el) {
+                                el.style.height = 'auto';
+                                el.style.height = `${Math.min(el.scrollHeight, 66)}px`;
+                              }
+                            }}
+                            onChange={(e) => {
+                              setEditNote(e.target.value);
+                              e.target.style.height = 'auto';
+                              e.target.style.height = `${Math.min(e.target.scrollHeight, 66)}px`;
+                            }}
                             onBlur={() => {
                               updateNote(a.index, editNote.trim());
                               setEditingIndex(null);
                             }}
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                              if (
+                                e.key === 'Enter' &&
+                                !e.shiftKey &&
+                                !e.nativeEvent.isComposing &&
+                                e.keyCode !== 229
+                              ) {
+                                e.preventDefault();
                                 updateNote(a.index, editNote.trim());
                                 setEditingIndex(null);
                               }

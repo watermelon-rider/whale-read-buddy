@@ -10,10 +10,14 @@ import { MessageBubble, type DisplayMessage } from './MessageBubble';
 import { SelectionAnnotator } from './SelectionAnnotator';
 
 interface Props {
+  conversationId: string;
   events: SessionEvent[];
   streaming: { reasoning: string; content: string } | null;
   onAnnotateSelection: (quote: string, note: string, messageId: string) => void;
 }
+
+/** 每个会话记住滚动位置：从历史/设置切回时直接定位，不再播放回底动画。 */
+const scrollMemory = new Map<string, number>();
 
 type DisplayItem =
   | { kind: 'message'; message: DisplayMessage }
@@ -82,11 +86,30 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
   return items;
 }
 
-export function MessageList({ events, streaming, onAnnotateSelection }: Props) {
+export function MessageList({ conversationId, events, streaming, onAnnotateSelection }: Props) {
   const items = useMemo(() => toDisplayItems(events), [events]);
   const listRef = useRef<HTMLDivElement>(null);
   // 用户上滚时钉住当前位置，不回到底部；点按钮恢复跟随。
   const [pinned, setPinned] = useState(true);
+  const restoredRef = useRef(false);
+
+  // 挂载后恢复上次的滚动位置；没有记忆则定位到底部（无动画）。
+  useEffect(() => {
+    if (restoredRef.current) return;
+    const el = listRef.current;
+    if (!el) return;
+    const saved = scrollMemory.get(conversationId);
+    // 内容尚未渲染出来时不恢复，等下一轮。
+    if (saved !== undefined && items.length === 0) return;
+    if (saved !== undefined) {
+      el.scrollTop = saved;
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+      setPinned(atBottom);
+    } else {
+      el.scrollTop = el.scrollHeight;
+    }
+    restoredRef.current = true;
+  }, [conversationId, items.length]);
 
   const scrollToBottom = (behavior: ScrollBehavior) => {
     const el = listRef.current;
@@ -101,6 +124,7 @@ export function MessageList({ events, streaming, onAnnotateSelection }: Props) {
   const handleScroll = () => {
     const el = listRef.current;
     if (!el) return;
+    scrollMemory.set(conversationId, el.scrollTop);
     setPinned(el.scrollHeight - el.scrollTop - el.clientHeight < 48);
   };
 

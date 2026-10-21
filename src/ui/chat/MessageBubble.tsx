@@ -3,7 +3,7 @@
  * - 用户消息：协议块隐藏，只显示提问 + 批注 chip（hover 查看）。
  * - 助手消息：Markdown 渲染；reasoning 折叠；Annotation N： 渲染为 hoverable chip。
  */
-import { useMemo, useState } from 'react';
+import { Children, useMemo, useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronRight, MessageSquareQuote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -34,7 +34,10 @@ function AnnotationChips({ annotations }: { annotations: AnnotationItem[] }) {
   );
 }
 
-/** 助手文本渲染：把 Annotation N： 标签替换为 hoverable chip。 */
+/**
+ * 助手文本渲染：在 Markdown 文本节点内部把「Annotation N：」替换为 hoverable chip。
+ * 不按标签切开分段渲染（会把跨段的 **加粗** 等配对切断）。
+ */
 function AssistantContent({
   content,
   replyAnnotations,
@@ -42,42 +45,55 @@ function AssistantContent({
   content: string;
   replyAnnotations?: AnnotationItem[];
 }) {
-  const segments = useMemo(() => {
-    if (!replyAnnotations || replyAnnotations.length === 0) return [{ text: content }];
-    const out: Array<{ text?: string; annoIndex?: number }> = [];
-    let last = 0;
-    for (const match of content.matchAll(REPLY_ANNOTATION_RE)) {
-      const at = match.index;
-      if (at > last) out.push({ text: content.slice(last, at) });
-      out.push({ annoIndex: Number(match[1]) });
-      last = at + match[0].length;
-    }
-    if (last < content.length) out.push({ text: content.slice(last) });
-    return out;
-  }, [content, replyAnnotations]);
+  const components = useMemo(() => {
+    const withChips = (children: ReactNode): ReactNode =>
+      Children.map(children, (child) => {
+        if (typeof child !== 'string') return child;
+        if (!replyAnnotations || !/Annotation\s+\d+\s*[：:]/.test(child)) return child;
+        const parts: ReactNode[] = [];
+        let last = 0;
+        let key = 0;
+        for (const match of child.matchAll(REPLY_ANNOTATION_RE)) {
+          const at = match.index;
+          if (at > last) parts.push(child.slice(last, at));
+          const anno = replyAnnotations.find((a) => a.index === Number(match[1]));
+          parts.push(
+            <span
+              key={key++}
+              className="dr-chip dr-reply-anno"
+              title={anno ? `「${anno.quote}」\n批注：${anno.note || '（无）'}` : undefined}
+            >
+              Annotation {match[1]}：
+            </span>,
+          );
+          last = at + match[0].length;
+        }
+        if (last < child.length) parts.push(child.slice(last));
+        return parts;
+      });
+
+    const wrap = (Tag: 'p' | 'li' | 'strong' | 'em' | 'td' | 'th' | 'h1' | 'h2' | 'h3') => {
+      const C = ({ children }: { children?: ReactNode }) => <Tag>{withChips(children)}</Tag>;
+      return C;
+    };
+
+    return {
+      p: wrap('p'),
+      li: wrap('li'),
+      strong: wrap('strong'),
+      em: wrap('em'),
+      td: wrap('td'),
+      th: wrap('th'),
+      h1: wrap('h1'),
+      h2: wrap('h2'),
+      h3: wrap('h3'),
+    };
+  }, [replyAnnotations]);
 
   return (
-    <>
-      {segments.map((seg, i) => {
-        if (seg.text !== undefined) {
-          return (
-            <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}>
-              {seg.text}
-            </ReactMarkdown>
-          );
-        }
-        const anno = replyAnnotations?.find((a) => a.index === seg.annoIndex);
-        return (
-          <span
-            key={i}
-            className="dr-chip dr-reply-anno"
-            title={anno ? `「${anno.quote}」\n批注：${anno.note || '（无）'}` : undefined}
-          >
-            Annotation {seg.annoIndex}：
-          </span>
-        );
-      })}
-    </>
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      {content}
+    </ReactMarkdown>
   );
 }
 

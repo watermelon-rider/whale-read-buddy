@@ -66,7 +66,7 @@ function positionMarkers(): void {
     const last = rects[rects.length - 1];
     if (!last) continue;
     item.marker.style.left = `${last.right + window.scrollX + 4}px`;
-    item.marker.style.top = `${last.top + window.scrollY - 8}px`;
+    item.marker.style.top = `${last.top + window.scrollY - 13}px`;
   }
 }
 
