@@ -8,6 +8,7 @@ import type { SessionEvent } from '../../core/session/events';
 import type { AnnotationItem } from '../../types';
 import { MessageBubble, type DisplayMessage } from './MessageBubble';
 import { SelectionAnnotator } from './SelectionAnnotator';
+import { AnnoPopover } from '../shared/AnnoPopover';
 
 interface Props {
   conversationId: string;
@@ -125,6 +126,7 @@ export function MessageList({
   const items = useMemo(() => toDisplayItems(events), [events]);
   const listRef = useRef<HTMLDivElement>(null);
   const marksRef = useRef<HTMLDivElement>(null);
+  const [annoDetail, setAnnoDetail] = useState<{ anno: AnnotationItem; rect: DOMRect } | null>(null);
   // 用户上滚时钉住当前位置，不回到底部；点按钮恢复跟随。
   const [pinned, setPinned] = useState(true);
   const restoredRef = useRef(false);
@@ -219,6 +221,11 @@ export function MessageList({
         const badge = document.createElement('span');
         badge.className = 'dr-chat-anno-badge';
         badge.textContent = String(a.index);
+        badge.title = '查看批注';
+        badge.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setAnnoDetail({ anno: a, rect: badge.getBoundingClientRect() });
+        });
         mark.after(badge);
         done = true;
       }
@@ -281,6 +288,14 @@ export function MessageList({
         >
           <ArrowDown size={15} strokeWidth={2} />
         </button>
+      )}
+      {annoDetail && (
+        <AnnoPopover
+          rect={annoDetail.rect}
+          quote={annoDetail.anno.quote}
+          note={annoDetail.anno.note}
+          onClose={() => setAnnoDetail(null)}
+        />
       )}
     </div>
   );

@@ -228,7 +228,6 @@
 .dr-anno-list {
   position: absolute;
   bottom: calc(100% + 6px);
-  left: 0;
   z-index: 20;
   background: #fff;
   border: 1px solid var(--dr-border);
@@ -240,6 +239,14 @@
   overflow-y: auto;
 }
 
+/* 用户气泡靠右，列表浮层锚定右边缘防止溢出面板 */
+.dr-anno-pop {
+  right: 0;
+}
+
+.dr-anno-list {
+  left: 0;
+}
 .dr-anno-pop-item,
 .dr-anno-item {
   padding: 6px 4px;
@@ -397,7 +404,7 @@
   font-weight: 600;
   margin-left: 2px;
   vertical-align: super;
-  cursor: default;
+  cursor: pointer;
 }
 
 /* Codex 风格输入卡片：1px 灰边框 + 均匀四散淡阴影（留外边距防裁剪） */
