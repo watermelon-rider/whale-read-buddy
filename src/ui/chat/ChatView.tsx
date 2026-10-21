@@ -40,8 +40,11 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
   });
   const [askUser, setAskUser] = useState<{ requestId: string; questions: AskUserQuestion[] } | null>(null);
   const [redactSources, setRedactSources] = useState<string[]>([]);
+  const [title, setTitle] = useState(conversation.title);
   const conversationIdRef = useRef(conversation.id);
   conversationIdRef.current = conversation.id;
+
+  useEffect(() => setTitle(conversation.title), [conversation.title]);
 
   // 初始快照：历史事件 + 草稿。
   useEffect(() => {
@@ -107,6 +110,9 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
           if (event.conversationId !== conversationIdRef.current) return;
           setAnnotations(event.annotations);
           break;
+        case 'conversationRenamed':
+          if (event.conversationId === conversationIdRef.current) setTitle(event.title);
+          break;
         default:
           break;
       }
@@ -167,8 +173,8 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
         <button className="dr-icon-btn" onClick={onOpenHistory} title="会话列表">
           <History size={16} strokeWidth={1.8} />
         </button>
-        <div className="dr-chat-title" title={conversation.title}>
-          {conversation.title}
+        <div className="dr-chat-title" title={title}>
+          {title}
         </div>
         <div className="dr-header-actions">
           <button className="dr-icon-btn" title="新会话" onClick={onNew}>

@@ -116,7 +116,8 @@ export default defineBackground(() => {
       case 'renameConversation': {
         const meta = await getConversation(req.conversationId);
         if (meta) {
-          await upsertConversation({ ...meta, title: req.title.trim() || meta.title });
+          // 手动重命名后锁定，LLM 首轮自动命名不再覆盖。
+          await upsertConversation({ ...meta, title: req.title.trim() || meta.title, titleLocked: true });
         }
         return { ok: true };
       }

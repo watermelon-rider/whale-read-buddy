@@ -66,6 +66,8 @@ export interface ConversationMeta {
   origin: string;
   /** 最近一条 context/page 的标题，或"新会话"。 */
   title: string;
+  /** 用户在历史列表手动改过标题后锁定，LLM 不再自动命名。 */
+  titleLocked?: boolean;
   createdAt: number;
   updatedAt: number;
 }

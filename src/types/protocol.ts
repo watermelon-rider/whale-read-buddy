@@ -33,7 +33,8 @@ export type PanelEvent =
   | { kind: 'sessionEvent'; conversationId: string; event: SessionEvent }
   | { kind: 'draftUpdated'; conversationId: string; annotations: AnnotationItem[] }
   | { kind: 'askUser'; conversationId: string; requestId: string; questions: AskUserQuestion[] }
-  | { kind: 'pageContext'; conversationId: string; page: PageContent };
+  | { kind: 'pageContext'; conversationId: string; page: PageContent }
+  | { kind: 'conversationRenamed'; conversationId: string; title: string };
 
 /** side panel → content script（经 background 中转）。 */
 export type ContentRequest =

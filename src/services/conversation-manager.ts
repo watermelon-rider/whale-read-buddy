@@ -3,6 +3,7 @@
  * 会话的创建/恢复、Agent 循环托管、页面内容注入、ask_user 桥接。
  */
 import { AgentLoop } from '../core/agent/loop';
+import { streamChat } from '../core/llm/deepseek';
 import { composeUserText, Session } from '../core/session/session';
 import type { SessionEvent } from '../core/session/events';
 import { assembleSystemPrompt } from '../core/prompt/system';
@@ -210,6 +211,46 @@ export class ConversationManager {
     const { error } = await loop.runTurn({ question, thinkingEnabled });
     this.emit({ kind: 'turnState', conversationId, state: 'idle', ...(error ? { error } : {}) });
     await this.touchMeta(live);
+
+    // 首轮对话后由 LLM 命名（用户手动改过标题的除外）。
+    const userTurns = live.session
+      .snapshot()
+      .filter((e) => e.type === 'user/message').length;
+    if (userTurns === 1 && !live.meta.titleLocked) {
+      void this.generateTitle(live, question, settings);
+    }
+  }
+
+  /** 用第一条用户消息生成简短会话标题（非思考模式，失败静默保留原标题）。 */
+  private async generateTitle(
+    live: LiveConversation,
+    question: string,
+    settings: Settings,
+  ): Promise<void> {
+    try {
+      const result = await streamChat(
+        settings,
+        {
+          messages: [
+            {
+              role: 'user',
+              content: `请为这段对话起一个简短标题（不超过 12 个字，只输出标题本身，不要引号）：\n\n${question.slice(0, 500)}`,
+            },
+          ],
+          model: settings.model,
+          thinkingEnabled: false,
+          reasoningEffort: 'low',
+        },
+        () => {},
+      );
+      const title = result.content.trim().replace(/^["'「『]+|["'」』]+$/g, '').slice(0, 20);
+      if (title.length === 0) return;
+      live.meta.title = title;
+      await upsertConversation(live.meta);
+      this.emit({ kind: 'conversationRenamed', conversationId: live.meta.id, title });
+    } catch {
+      // 命名失败不影响对话，保留原标题。
+    }
   }
 
   cancelTurn(conversationId: string): void {

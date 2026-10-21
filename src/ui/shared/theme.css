@@ -24,11 +24,11 @@ body,
   background: var(--dr-bg);
   color: var(--dr-text);
   font-family:
-    'Noto Sans SC',
     -apple-system,
+    BlinkMacSystemFont,
     'PingFang SC',
     'Microsoft YaHei',
-    'Noto Sans CJK SC',
+    'Segoe UI',
     sans-serif;
   font-size: 14px;
   line-height: 1.6;
