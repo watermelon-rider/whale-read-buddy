@@ -82,7 +82,7 @@ export function SettingsView({ conversationId, onBack }: Props) {
             <label className="dr-field">
               <span>系统提示词</span>
               <textarea
-                rows={3}
+                rows={4}
                 value={settings.globalInstructions}
                 placeholder="例：回答时先给结论，再展开论证。"
                 onChange={(e) => patch({ globalInstructions: e.target.value })}
@@ -91,7 +91,7 @@ export function SettingsView({ conversationId, onBack }: Props) {
             <label className="dr-field dr-field-last">
               <span>会话提示词（仅对当前会话生效）</span>
               <textarea
-                rows={3}
+                rows={4}
                 value={conversationPrompt}
                 placeholder="例：这次阅读重点关注代码实现细节。"
                 onChange={(e) => {

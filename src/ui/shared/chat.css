@@ -753,6 +753,11 @@
   color: var(--dr-text);
 }
 
+.dr-field textarea {
+  resize: none;
+  overflow-y: auto;
+}
+
 .dr-field input:focus,
 .dr-field textarea:focus {
   box-shadow: 0 0 0 2px var(--dr-accent-soft);
