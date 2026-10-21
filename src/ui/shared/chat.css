@@ -461,12 +461,12 @@
 }
 
 .dr-anno-chip-filled {
-  background: #efeff1;
+  background: #e5e7eb;
   color: var(--dr-text);
 }
 
 .dr-anno-chip-filled:hover {
-  background: #e5e5e9;
+  background: #dcdfe5;
 }
 
 .dr-anno-chip {
@@ -819,11 +819,6 @@
   gap: 4px;
   padding: 10px 0;
   font-size: 13px;
-  border-bottom: 1px solid var(--dr-border);
-}
-
-.dr-field-last {
-  border-bottom: none;
 }
 
 .dr-field > span {

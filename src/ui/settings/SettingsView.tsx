@@ -68,7 +68,7 @@ export function SettingsView({ conversationId, onBack }: Props) {
           </div>
         </div>
         <div className="dr-settings-section">
-          <div className="dr-settings-heading">人设与指令</div>
+          <div className="dr-settings-heading">人设与提示词</div>
           <div className="dr-settings-card">
             <label className="dr-field">
               <span>人设（留空用默认）</span>

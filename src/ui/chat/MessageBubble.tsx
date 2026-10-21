@@ -3,7 +3,7 @@
  * - 用户消息：协议块隐藏，只显示提问 + 批注 chip（hover 查看）。
  * - 助手消息：Markdown 渲染；reasoning 折叠；Annotation N： 渲染为 hoverable chip。
  */
-import { Children, useMemo, useState, type ReactNode } from 'react';
+import { Children, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { MessageSquareQuote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -24,8 +24,32 @@ function AnnotationChips({
   onShowDetail: (d: AnnoDetail) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLSpanElement>(null);
+
+  // 失焦/点击外部/Esc 自动关闭列表浮层。
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    window.addEventListener('blur', onClose2);
+    function onClose2() {
+      setOpen(false);
+    }
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('blur', onClose2);
+    };
+  }, [open]);
+
   return (
-    <span className="dr-anno-chips">
+    <span className="dr-anno-chips" ref={rootRef}>
       <button className="dr-chip dr-chip-bordered" onClick={() => setOpen((v) => !v)}>
         <MessageSquareQuote size={13} strokeWidth={1.8} />
         批注 ×{annotations.length}
