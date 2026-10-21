@@ -19,6 +19,12 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
   const [editTitle, setEditTitle] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  const doDelete = async (id: string) => {
+    await request({ kind: 'deleteConversation', conversationId: id });
+    setConfirmDeleteId(null);
+    await reload();
+  };
+
   const saveTitle = async (id: string) => {
     await request({ kind: 'renameConversation', conversationId: id, title: editTitle });
     setEditingId(null);
@@ -167,9 +173,3 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
     </div>
   );
 }
-  const doDelete = async (id: string) => {
-    await request({ kind: 'deleteConversation', conversationId: id });
-    setConfirmDeleteId(null);
-    await reload();
-  };
-
