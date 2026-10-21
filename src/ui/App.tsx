@@ -21,6 +21,12 @@ export function App() {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id || !tab.url) return;
       setCurrentUrl(tab.url);
+      // 优先恢复最近活跃的会话（用户上次离开时的位置）；没有再按站点打开。
+      const last = await request<ConversationMeta | null>({ kind: 'getLastConversation' });
+      if (last) {
+        setConversation(last);
+        return;
+      }
       const meta = await request<ConversationMeta>({
         kind: 'openConversation',
         tabId: tab.id,

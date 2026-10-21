@@ -16,8 +16,27 @@ interface Props {
   onAnnotateSelection: (quote: string, note: string, messageId: string) => void;
 }
 
-/** 每个会话记住滚动位置：从历史/设置切回时直接定位，不再播放回底动画。 */
+/** 每个会话记住滚动位置：切视图/重开面板都直接定位，不播回底动画。
+ *  内存 Map（同次面板会话内快速恢复）+ chrome.storage.session（面板销毁后恢复）。 */
 const scrollMemory = new Map<string, number>();
+
+const scrollKey = (id: string) => `scroll:${id}`;
+
+function persistScroll(conversationId: string, top: number): void {
+  scrollMemory.set(conversationId, top);
+  void chrome.storage.session?.set({ [scrollKey(conversationId)]: top }).catch(() => {});
+}
+
+async function readPersistedScroll(conversationId: string): Promise<number | undefined> {
+  const mem = scrollMemory.get(conversationId);
+  if (mem !== undefined) return mem;
+  try {
+    const raw = await chrome.storage.session?.get(scrollKey(conversationId));
+    return raw?.[scrollKey(conversationId)] as number | undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 type DisplayItem =
   | { kind: 'message'; message: DisplayMessage }
@@ -96,19 +115,26 @@ export function MessageList({ conversationId, events, streaming, onAnnotateSelec
   // 挂载后恢复上次的滚动位置；没有记忆则定位到底部（无动画）。
   useEffect(() => {
     if (restoredRef.current) return;
-    const el = listRef.current;
-    if (!el) return;
-    const saved = scrollMemory.get(conversationId);
-    // 内容尚未渲染出来时不恢复，等下一轮。
-    if (saved !== undefined && items.length === 0) return;
-    if (saved !== undefined) {
-      el.scrollTop = saved;
-      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
-      setPinned(atBottom);
-    } else {
-      el.scrollTop = el.scrollHeight;
-    }
-    restoredRef.current = true;
+    let cancelled = false;
+    void (async () => {
+      const el = listRef.current;
+      if (!el) return;
+      const saved = await readPersistedScroll(conversationId);
+      // 内容尚未渲染出来时不恢复，等下一轮。
+      if (saved !== undefined && items.length === 0) return;
+      if (cancelled || restoredRef.current) return;
+      if (saved !== undefined) {
+        el.scrollTop = saved;
+        const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
+        setPinned(atBottom);
+      } else {
+        el.scrollTop = el.scrollHeight;
+      }
+      restoredRef.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [conversationId, items.length]);
 
   const scrollToBottom = (behavior: ScrollBehavior) => {
@@ -124,7 +150,7 @@ export function MessageList({ conversationId, events, streaming, onAnnotateSelec
   const handleScroll = () => {
     const el = listRef.current;
     if (!el) return;
-    scrollMemory.set(conversationId, el.scrollTop);
+    persistScroll(conversationId, el.scrollTop);
     setPinned(el.scrollHeight - el.scrollTop - el.clientHeight < 48);
   };
 

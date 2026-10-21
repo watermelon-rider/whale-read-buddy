@@ -61,7 +61,7 @@ export default defineBackground(() => {
   });
 
   const PANEL_REQUEST_KINDS = new Set([
-    'openConversation', 'newConversation', 'sendMessage', 'cancelTurn', 'listConversations',
+    'openConversation', 'getLastConversation', 'newConversation', 'sendMessage', 'cancelTurn', 'listConversations',
     'deleteConversation', 'renameConversation', 'loadHistory', 'saveDraft', 'loadDraft', 'restoreHighlights',
     'getSettings', 'saveSettings', 'getSiteInstruction', 'saveSiteInstruction',
     'listSiteInstructions', 'answerAskUser',
@@ -83,6 +83,8 @@ export default defineBackground(() => {
         await manager.refreshSystemPrompt(new URL(req.url).origin);
         return manager.openConversation(req.tabId, req.url);
       }
+      case 'getLastConversation':
+        return (await manager.getLastActiveConversation()) ?? null;
       case 'newConversation': {
         const meta = await manager.createConversation(req.url);
         await manager.refreshSystemPrompt(meta.origin);

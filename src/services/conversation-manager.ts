@@ -30,6 +30,8 @@ import { loadSettings, loadSiteInstruction } from './storage/settings';
 import { extractPageForTab } from './extract-service';
 import type { PanelEvent } from '../types/protocol';
 
+const LAST_CONVERSATION_KEY = 'lastActiveConversationId';
+
 interface LiveConversation {
   meta: ConversationMeta;
   session: Session;
@@ -58,6 +60,7 @@ export class ConversationManager {
     if (existing.length > 0 && existing[0]) {
       await this.ensureLive(existing[0].id);
       this.currentConversationId = existing[0].id;
+      await this.markActive(existing[0].id);
       return existing[0];
     }
     return this.createConversation(url);
@@ -74,7 +77,24 @@ export class ConversationManager {
     await upsertConversation(meta);
     await this.ensureLive(meta.id);
     this.currentConversationId = meta.id;
+    await this.markActive(meta.id);
     return meta;
+  }
+
+  /** 最近活跃的会话（供面板重开时恢复）；不存在或已被删除时返回 undefined。 */
+  async getLastActiveConversation(): Promise<ConversationMeta | undefined> {
+    const raw = await chrome.storage.local.get(LAST_CONVERSATION_KEY);
+    const id = raw[LAST_CONVERSATION_KEY] as string | undefined;
+    if (!id) return undefined;
+    const meta = await getConversation(id);
+    if (!meta) return undefined;
+    await this.ensureLive(id);
+    this.currentConversationId = id;
+    return meta;
+  }
+
+  private async markActive(conversationId: string): Promise<void> {
+    await chrome.storage.local.set({ [LAST_CONVERSATION_KEY]: conversationId });
   }
 
   /**
@@ -148,6 +168,8 @@ export class ConversationManager {
     session.onAppend((e) => void persistEvent(conversationId, e));
     // 实时推送：side panel 关闭时 postMessage 静默失败，重开后由快照重建。
     session.onAppend((e) => this.emit({ kind: 'sessionEvent', conversationId, event: e }));
+    // 任何路径接触到会话都记为最近活跃（面板重开时恢复用）。
+    void this.markActive(conversationId);
     const live: LiveConversation = {
       meta,
       session,

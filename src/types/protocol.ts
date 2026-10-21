@@ -9,6 +9,7 @@ import type { SessionEvent } from '../core/session/events';
 /** side panel → background 请求。 */
 export type PanelRequest =
   | { kind: 'openConversation'; tabId: number; url: string }
+  | { kind: 'getLastConversation' }
   | { kind: 'newConversation'; url: string }
   | { kind: 'sendMessage'; conversationId: string; question: string; annotations: AnnotationItem[]; thinkingEnabled: boolean }
   | { kind: 'cancelTurn'; conversationId: string }
