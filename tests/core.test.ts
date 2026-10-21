@@ -2,7 +2,7 @@
  * core/ 纯逻辑单元测试：会话投影、批注协议、搜索合并、截断、工具校验。
  */
 import { describe, expect, it } from 'vitest';
-import { Session, composeUserText } from '../src/core/session/session';
+import { Session, composeUserText, repairDanglingToolCalls } from '../src/core/session/session';
 import {
   ANNOTATION_DELIMITER,
   buildAnnotationProtocol,
@@ -111,6 +111,34 @@ describe('会话投影 deriveMessages', () => {
     s.append('assistant/attempt', { error: '网络错误' });
     const msgs = s.deriveMessages();
     expect(msgs).toHaveLength(1);
+  });
+
+  it('孤儿 tool_calls 自动补合成错误结果（防 400）', () => {
+    const s = new Session('t');
+    s.append('user/message', { text: '查一下' });
+    // 模拟回合中断：工具结果从未落盘。
+    s.append('assistant/message', {
+      content: '',
+      toolCalls: [{ id: 'c9', name: 'web_search', argumentsJson: '{"queries":["x"]}' }],
+    });
+    s.append('user/message', { text: '下一句' });
+
+    const msgs = s.deriveMessages();
+    const toolMsg = msgs.find((m) => m.role === 'tool' && m.tool_call_id === 'c9');
+    expect(toolMsg).toBeDefined();
+    expect(toolMsg?.content).toContain('被中断');
+    // 合成结果紧跟在 assistant 消息后、下一条用户消息前
+    const aiIdx = msgs.findIndex((m) => m.role === 'assistant');
+    expect(msgs[aiIdx + 1]?.role).toBe('tool');
+    expect(msgs[aiIdx + 2]?.content).toBe('下一句');
+  });
+
+  it('repairDanglingToolCalls：完整配对的调用不受影响', () => {
+    const fixed = repairDanglingToolCalls([
+      { role: 'assistant', content: null, tool_calls: [{ id: 'a', type: 'function', function: { name: 'x', arguments: '{}' } }] },
+      { role: 'tool', tool_call_id: 'a', content: 'ok' },
+    ]);
+    expect(fixed).toHaveLength(2);
   });
 });
 

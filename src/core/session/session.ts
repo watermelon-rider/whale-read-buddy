@@ -154,8 +154,35 @@ export class Session {
           break;
       }
     }
-    return messages;
+    return repairDanglingToolCalls(messages);
   }
+}
+
+/**
+ * 修复孤儿 tool_calls：assistant 消息带了 tool_calls 但后续没有对应 tool 结果时
+ * （回合被中断 / SW 重启 / compaction 截断），补一条合成错误结果。
+ * 否则 DeepSeek 会以 400 拒绝整个请求。
+ */
+export function repairDanglingToolCalls(messages: ChatMessage[]): ChatMessage[] {
+  const answeredIds = new Set(
+    messages.filter((m) => m.role === 'tool').map((m) => m.tool_call_id),
+  );
+  const out: ChatMessage[] = [];
+  for (const msg of messages) {
+    out.push(msg);
+    if (msg.role === 'assistant' && msg.tool_calls) {
+      for (const tc of msg.tool_calls) {
+        if (!answeredIds.has(tc.id)) {
+          out.push({
+            role: 'tool',
+            tool_call_id: tc.id,
+            content: 'Error: 该工具调用被中断，没有返回结果。请忽略它继续回答用户。',
+          });
+        }
+      }
+    }
+  }
+  return out;
 }
 
 /** 组装用户消息文本：提问在前，批注协议块附后（「其他信息：」分隔）。 */
