@@ -160,16 +160,15 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
     <div className="dr-chat">
       <header className="dr-chat-header">
         {/* Chrome 原生侧边栏已带品牌与关闭按钮，这里不重复。 */}
-        <span className="dr-header-spacer" />
+        <button className="dr-icon-btn" onClick={onOpenHistory} title="会话列表">
+          <History size={16} strokeWidth={1.8} />
+        </button>
         <div className="dr-chat-title" title={conversation.title}>
           {conversation.title}
         </div>
         <div className="dr-header-actions">
           <button className="dr-icon-btn" title="新会话" onClick={onNew}>
             <Plus size={16} strokeWidth={1.8} />
-          </button>
-          <button className="dr-icon-btn" onClick={onOpenHistory} title="会话列表">
-            <History size={16} strokeWidth={1.8} />
           </button>
           <button className="dr-icon-btn" onClick={onOpenSettings} title="设置">
             <Settings2 size={16} strokeWidth={1.8} />

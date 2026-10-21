@@ -16,6 +16,10 @@ export interface PageAnnotationHandlers {
 
 const HOST_CSS = 'position:absolute;z-index:2147483647;';
 
+/** lucide "check" 图标的 SVG 路径（content script 里不用 React，直接内联 SVG）。 */
+const CHECK_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M20 6 9 17l-5-5"/></svg>';
+
 /** 从选区端点向前/向后收集上下文文本（用于多处出现时消歧）。 */
 function captureAnchor(range: Range): { prefix: string; suffix: string } {
   const CONTEXT_LEN = 48;
@@ -73,7 +77,8 @@ const SHADOW_CSS = `
 .dr-input::placeholder { color: #9ca3af; }
 .dr-ok {
   width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
-  background: #1f2329; color: #fff; font-size: 15px; line-height: 30px; text-align: center;
+  background: #4e75df; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
   flex: none;
 }
 .dr-del {
@@ -167,7 +172,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
 
     const ok = document.createElement('button');
     ok.className = 'dr-ok';
-    ok.textContent = '✓';
+    ok.innerHTML = CHECK_SVG;
     const confirm = () => {
       const note = input.value.trim();
       if (state.mode === 'add') handlers.onAdd(state.quote, note, currentAnchor);

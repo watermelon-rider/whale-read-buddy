@@ -15,11 +15,6 @@
   border-bottom: 1px solid var(--dr-border);
 }
 
-.dr-header-spacer {
-  flex: none;
-  width: 0;
-}
-
 .dr-header-actions {
   display: flex;
   align-items: center;
@@ -527,11 +522,13 @@
   height: 28px;
   border-radius: 50%;
   border: none;
-  background: #1f2329;
+  background: #4e75df;
   color: #fff;
-  font-size: 14px;
   cursor: pointer;
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ask_user 卡片 */

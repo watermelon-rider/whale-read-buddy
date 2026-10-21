@@ -3,6 +3,7 @@
  * 选中消息文字 →「批注」按钮 → 原地编辑卡片（引用 + 输入框 + ✓）→ 确认进入 chip 列表。
  */
 import { useRef, useState, type ReactNode, type MouseEvent } from 'react';
+import { Check } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -116,7 +117,7 @@ export function SelectionAnnotator({ children, onAnnotate }: Props) {
               }}
             />
             <button className="dr-sel-ok" onClick={confirm} aria-label="确认批注">
-              ✓
+              <Check size={14} strokeWidth={2.4} />
             </button>
           </div>
         </div>
