@@ -188,7 +188,7 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
       />
       {turn.running && (
         <div className="dr-status">
-          {turn.toolNames ? `正在调用工具：${turn.toolNames.join('、')}…` : '正在思考…'}
+          {turn.toolNames ? `大肥鱼翻书中（${turn.toolNames.join('、')}）…` : '大肥鱼干饭中…'}
         </div>
       )}
       {turn.error && <div className="dr-error">{turn.error}</div>}

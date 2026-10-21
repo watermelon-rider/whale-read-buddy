@@ -81,7 +81,7 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           kind: 'status',
           id: `evt-${e.seq}`,
           icon: FileText,
-          text: `已读取页面：${e.data.title}${e.data.truncated ? '（已截断）' : ''}`,
+          text: `大肥鱼看了你的网页：${e.data.title}${e.data.truncated ? '（太长，只吃了一部分）' : ''}`,
         });
         break;
       case 'tool/result':
@@ -89,7 +89,9 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           kind: 'status',
           id: `evt-${e.seq}`,
           icon: Wrench,
-          text: `工具 ${e.data.name} ${e.data.isError ? '执行出错' : '已完成'}`,
+          text: e.data.isError
+            ? `大肥鱼想用 ${e.data.name}，但没成功`
+            : `大肥鱼用 ${e.data.name} 查完啦`,
         });
         break;
       case 'compaction/summary':
@@ -97,7 +99,7 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           kind: 'status',
           id: `evt-${e.seq}`,
           icon: Shrink,
-          text: '较早的对话已压缩为摘要',
+          text: '大肥鱼消化了早前的聊天（已压缩成摘要）',
         });
         break;
       default:

@@ -177,7 +177,7 @@ export function MessageBubble({
             ) : (
               <ChevronRight size={13} strokeWidth={1.8} />
             )}
-            思维链
+            大肥鱼的脑回路
           </button>
           {showReasoning && <div className="dr-reasoning-body">{reasoningText}</div>}
         </div>

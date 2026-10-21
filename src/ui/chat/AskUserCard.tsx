@@ -15,7 +15,7 @@ export function AskUserCard({ questions, onSubmit }: Props) {
 
   return (
     <div className="dr-ask-card">
-      <div className="dr-ask-title">我需要向你确认几个问题：</div>
+      <div className="dr-ask-title">大肥鱼想问你：</div>
       {questions.map((q) => (
         <div key={q.id} className="dr-ask-question">
           {q.header && <div className="dr-ask-header">{q.header}</div>}

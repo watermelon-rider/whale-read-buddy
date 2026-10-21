@@ -48,5 +48,5 @@ export function redactReasoning(text: string, sources: string[]): string {
     return true;
   });
   const out = kept.join('').trim();
-  return out.length > 0 ? out : '（思维链涉及内部设定，已隐藏）';
+  return out.length > 0 ? out : 'hmm';
 }

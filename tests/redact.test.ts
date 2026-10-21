@@ -24,7 +24,7 @@ describe('redactReasoning', () => {
 
   it('全部命中时给占位提示', () => {
     const out = redactReasoning('OBEY_MASTER_ALWAYS 这是设定。', []);
-    expect(out).toBe('（思维链涉及内部设定，已隐藏）');
+    expect(out).toBe('hmm');
   });
 
   it('正常思维链不受影响', () => {
