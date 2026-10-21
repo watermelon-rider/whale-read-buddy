@@ -114,18 +114,25 @@ export class AgentLoop {
       tools: TOOL_SCHEMAS.map((t) => t.function.name),
     });
 
-    return streamChat(
-      settings,
-      {
-        messages: session.deriveMessages(),
-        tools: TOOL_SCHEMAS,
-        model: settings.model,
-        thinkingEnabled,
-        reasoningEffort: settings.reasoningEffort,
-        signal,
-      },
-      this.deps.onDelta,
-    );
+    const messages = session.deriveMessages();
+    const base = {
+      messages,
+      tools: TOOL_SCHEMAS,
+      model: settings.model,
+      thinkingEnabled,
+      reasoningEffort: settings.reasoningEffort,
+      signal,
+    };
+    try {
+      // 前缀续写强制「脑回路：」开头（提示词约束已被证明不可靠）。
+      return await streamChat(settings, { ...base, prefixContinuation: '脑回路：' }, this.deps.onDelta);
+    } catch (err) {
+      // Beta 前缀与 tools/思考模式的组合若被拒绝（400），退化为普通请求。
+      if (err instanceof DeepSeekApiError && err.status === 400) {
+        return streamChat(settings, base, this.deps.onDelta);
+      }
+      throw err;
+    }
   }
 
   private latestSystemPrompt(): string | undefined {
