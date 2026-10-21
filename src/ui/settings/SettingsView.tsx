@@ -3,6 +3,7 @@
  * API key 仅存 chrome.storage.local，从不上 sync。
  */
 import { useEffect, useState } from 'react';
+import { ArrowLeft, Check } from 'lucide-react';
 import type { Settings } from '../../types';
 import { request } from '../shared/backend';
 
@@ -42,7 +43,7 @@ export function SettingsView({ currentOrigin, onBack }: Props) {
     <div className="dr-settings">
       <header className="dr-chat-header">
         <button className="dr-icon-btn" onClick={onBack}>
-          ←
+          <ArrowLeft size={16} strokeWidth={1.8} />
         </button>
         <div className="dr-chat-title">设置</div>
         <span />
@@ -98,8 +99,9 @@ export function SettingsView({ currentOrigin, onBack }: Props) {
             }}
           />
         </label>
-        <button className="dr-primary-btn" onClick={() => void save()}>
-          {saved ? '已保存 ✓' : '保存'}
+        <button className="dr-primary-btn dr-save-btn" onClick={() => void save()}>
+          {saved && <Check size={14} strokeWidth={2} />}
+          {saved ? '已保存' : '保存'}
         </button>
       </div>
     </div>

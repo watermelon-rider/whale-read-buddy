@@ -14,6 +14,7 @@
   "dependencies": {
     "defuddle": "^0.19.5",
     "dexie": "^4.0.11",
+    "lucide-react": "^1.60.0",
     "pdfjs-dist": "^4.10.38",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

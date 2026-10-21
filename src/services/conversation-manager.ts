@@ -77,9 +77,21 @@ export class ConversationManager {
     return meta;
   }
 
+  /**
+   * MV3 service worker 空闲会被回收，重启后内存里的 currentConversationId 丢失。
+   * 丢失时按当前活跃标签页找回（或创建）会话，保证页面批注不被静默丢弃。
+   */
+  async resolveCurrentConversationId(): Promise<string | undefined> {
+    if (this.currentConversationId) return this.currentConversationId;
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.id || !tab.url || !/^https?:/.test(tab.url)) return undefined;
+    const meta = await this.openConversation(tab.id, tab.url);
+    return meta.id;
+  }
+
   /** 页面划词批注进入当前会话草稿（canonical index 在此分配）。 */
   async addPageAnnotation(quote: string, note: string): Promise<AnnotationItem[]> {
-    const conversationId = this.currentConversationId;
+    const conversationId = await this.resolveCurrentConversationId();
     if (!conversationId) return [];
     const draft = await loadDraft(conversationId);
     const annotations = draft?.annotations ?? [];
@@ -93,7 +105,7 @@ export class ConversationManager {
   }
 
   async updatePageAnnotation(quote: string, note: string): Promise<void> {
-    const conversationId = this.currentConversationId;
+    const conversationId = await this.resolveCurrentConversationId();
     if (!conversationId) return;
     const draft = await loadDraft(conversationId);
     if (!draft) return;
@@ -105,7 +117,7 @@ export class ConversationManager {
   }
 
   async removePageAnnotation(quote: string): Promise<void> {
-    const conversationId = this.currentConversationId;
+    const conversationId = await this.resolveCurrentConversationId();
     if (!conversationId) return;
     const draft = await loadDraft(conversationId);
     if (!draft) return;

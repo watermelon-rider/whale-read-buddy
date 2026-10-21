@@ -4,6 +4,7 @@
  * - 助手消息：Markdown 渲染；reasoning 折叠；Annotation N： 渲染为 hoverable chip。
  */
 import { useMemo, useState } from 'react';
+import { ChevronDown, ChevronRight, MessageSquareQuote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AnnotationItem } from '../../types';
@@ -14,6 +15,7 @@ function AnnotationChips({ annotations }: { annotations: AnnotationItem[] }) {
   return (
     <span className="dr-anno-chips">
       <button className="dr-chip" onClick={() => setOpen((v) => !v)}>
+        <MessageSquareQuote size={13} strokeWidth={1.8} />
         批注 ×{annotations.length}
       </button>
       {open && (
@@ -115,8 +117,13 @@ export function MessageBubble({ message }: { message: DisplayMessage }) {
     <div className="dr-msg dr-msg-assistant">
       {message.reasoning && (
         <div className="dr-reasoning">
-          <button className="dr-icon-btn" onClick={() => setShowReasoning((v) => !v)}>
-            {showReasoning ? '▾ 思维链' : '▸ 思维链'}
+          <button className="dr-reasoning-toggle" onClick={() => setShowReasoning((v) => !v)}>
+            {showReasoning ? (
+              <ChevronDown size={13} strokeWidth={1.8} />
+            ) : (
+              <ChevronRight size={13} strokeWidth={1.8} />
+            )}
+            思维链
           </button>
           {showReasoning && <div className="dr-reasoning-body">{message.reasoning}</div>}
         </div>

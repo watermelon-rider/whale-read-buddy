@@ -3,6 +3,7 @@
  * 状态来源 = 快照（loadHistory）+ 实时推送（Port 事件）。
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { History, Settings2 } from 'lucide-react';
 import type { SessionEvent } from '../../core/session/events';
 import type { AskUserQuestion } from '../../core/agent/tools';
 import type { StreamDelta } from '../../core/llm/stream';
@@ -158,13 +159,13 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
     <div className="dr-chat">
       <header className="dr-chat-header">
         <button className="dr-icon-btn" onClick={onOpenHistory} title="会话列表">
-          ☰
+          <History size={16} strokeWidth={1.8} />
         </button>
         <div className="dr-chat-title" title={conversation.title}>
           {conversation.title}
         </div>
         <button className="dr-icon-btn" onClick={onOpenSettings} title="设置">
-          ⚙
+          <Settings2 size={16} strokeWidth={1.8} />
         </button>
       </header>
       <MessageList

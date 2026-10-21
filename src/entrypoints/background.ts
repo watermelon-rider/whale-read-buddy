@@ -181,7 +181,7 @@ export default defineBackground(() => {
   });
 
   async function resyncCurrentDraft(): Promise<void> {
-    const id = manager.currentConversationId;
+    const id = await manager.resolveCurrentConversationId();
     if (!id) return;
     const draft = await loadDraft(id);
     await syncHighlightsToActiveTab(draft?.annotations ?? []);

@@ -3,6 +3,7 @@
  * 右侧模型选择器 + 黑色圆形发送按钮。思维链常开（不暴露开关）。
  */
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { ArrowUp, ChevronDown, MessageSquareQuote, Square, X } from 'lucide-react';
 import type { AnnotationItem, ModelId, Settings } from '../../types';
 
 export interface ModelChoice {
@@ -89,7 +90,7 @@ export function Composer(props: Props) {
                 onClick={() => setShowAnnotations((v) => !v)}
                 title="查看 / 编辑批注"
               >
-                <span className="dr-anno-chip-icon">💬</span>
+                <MessageSquareQuote size={14} strokeWidth={1.8} />
                 批注 ×{props.annotations.length}
               </button>
               {showAnnotations && (
@@ -140,7 +141,7 @@ export function Composer(props: Props) {
                           )
                         }
                       >
-                        ✕
+                        <X size={13} strokeWidth={1.8} />
                       </button>
                     </div>
                   ))}
@@ -157,7 +158,7 @@ export function Composer(props: Props) {
               title="选择模型与思考强度"
             >
               {props.modelChoice.model} {EFFORT_LABEL[props.modelChoice.reasoningEffort]}
-              <span className="dr-model-caret">⌄</span>
+              <ChevronDown size={13} strokeWidth={1.8} className="dr-model-caret" />
             </button>
             {showModelMenu && (
               <div className="dr-model-menu">
@@ -183,7 +184,7 @@ export function Composer(props: Props) {
           </div>
           {props.running ? (
             <button className="dr-send" onClick={props.onCancel} title="停止">
-              ■
+              <Square size={12} strokeWidth={2} fill="currentColor" />
             </button>
           ) : (
             <button
@@ -192,7 +193,7 @@ export function Composer(props: Props) {
               onClick={props.onSend}
               title="发送（Enter）"
             >
-              ↑
+              <ArrowUp size={16} strokeWidth={2} />
             </button>
           )}
         </div>

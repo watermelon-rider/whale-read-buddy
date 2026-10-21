@@ -1,8 +1,9 @@
 /**
  * 消息列表：把会话事件投影为展示消息 + 流式增量气泡。
- * 同时承载对话内划词批注（SelectionAnnotator）。
+ * 页面注入/工具调用/压缩渲染为 12px 状态行（与思维链同字号，lucide 图标）。
  */
 import { useEffect, useMemo, useRef } from 'react';
+import { FileText, Shrink, Wrench, type LucideIcon } from 'lucide-react';
 import type { SessionEvent } from '../../core/session/events';
 import type { AnnotationItem } from '../../types';
 import { MessageBubble, type DisplayMessage } from './MessageBubble';
@@ -14,82 +15,102 @@ interface Props {
   onAnnotateSelection: (quote: string, note: string, messageId: string) => void;
 }
 
-/** 把事件日志投影为 UI 消息（deriveDisplayMessages）。 */
-function toDisplayMessages(events: SessionEvent[]): DisplayMessage[] {
-  const messages: DisplayMessage[] = [];
+type DisplayItem =
+  | { kind: 'message'; message: DisplayMessage }
+  | { kind: 'status'; id: string; icon: LucideIcon; text: string };
+
+/** 把事件日志投影为 UI 展示项。 */
+function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
+  const items: DisplayItem[] = [];
   let lastAnnotations: AnnotationItem[] | undefined;
   for (const e of events) {
     switch (e.type) {
       case 'user/message': {
         lastAnnotations = e.data.annotations;
-        messages.push({
-          id: `evt-${e.seq}`,
-          role: 'user',
-          text: e.data.text,
-          ...(e.data.annotations ? { annotations: e.data.annotations } : {}),
+        items.push({
+          kind: 'message',
+          message: {
+            id: `evt-${e.seq}`,
+            role: 'user',
+            text: e.data.text,
+            ...(e.data.annotations ? { annotations: e.data.annotations } : {}),
+          },
         });
         break;
       }
       case 'assistant/message':
-        messages.push({
-          id: `evt-${e.seq}`,
-          role: 'assistant',
-          text: e.data.content,
-          ...(e.data.reasoning ? { reasoning: e.data.reasoning } : {}),
-          ...(lastAnnotations ? { replyAnnotations: lastAnnotations } : {}),
-          ...(e.data.interrupted ? { interrupted: true } : {}),
+        items.push({
+          kind: 'message',
+          message: {
+            id: `evt-${e.seq}`,
+            role: 'assistant',
+            text: e.data.content,
+            ...(e.data.reasoning ? { reasoning: e.data.reasoning } : {}),
+            ...(lastAnnotations ? { replyAnnotations: lastAnnotations } : {}),
+            ...(e.data.interrupted ? { interrupted: true } : {}),
+          },
         });
         break;
       case 'context/page':
-        messages.push({
+        items.push({
+          kind: 'status',
           id: `evt-${e.seq}`,
-          role: 'assistant',
-          text: `> 📄 已读取页面：${e.data.title}${e.data.truncated ? '（已截断）' : ''}`,
+          icon: FileText,
+          text: `已读取页面：${e.data.title}${e.data.truncated ? '（已截断）' : ''}`,
         });
         break;
       case 'tool/result':
-        messages.push({
+        items.push({
+          kind: 'status',
           id: `evt-${e.seq}`,
-          role: 'assistant',
-          text: `> 🔧 工具 ${e.data.name} ${e.data.isError ? '执行出错' : '已完成'}`,
+          icon: Wrench,
+          text: `工具 ${e.data.name} ${e.data.isError ? '执行出错' : '已完成'}`,
         });
         break;
       case 'compaction/summary':
-        messages.push({
+        items.push({
+          kind: 'status',
           id: `evt-${e.seq}`,
-          role: 'assistant',
-          text: '> 🗜️ 较早的对话已压缩为摘要。',
+          icon: Shrink,
+          text: '较早的对话已压缩为摘要',
         });
         break;
       default:
         break;
     }
   }
-  return messages;
+  return items;
 }
 
 export function MessageList({ events, streaming, onAnnotateSelection }: Props) {
-  const messages = useMemo(() => toDisplayMessages(events), [events]);
+  const items = useMemo(() => toDisplayItems(events), [events]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length, streaming?.content.length]);
+  }, [items.length, streaming?.content.length]);
 
   return (
     <div className="dr-msg-list">
       <SelectionAnnotator onAnnotate={onAnnotateSelection}>
-        {messages.length === 0 && !streaming && (
+        {items.length === 0 && !streaming && (
           <div className="dr-empty">
             我是你的陪读伙伴。打开想读的页面，直接提问即可；
             也可以在页面或对话里划词批注，随问题一起发给我。
           </div>
         )}
-        {messages.map((m) => (
-          <div key={m.id} data-message-id={m.id}>
-            <MessageBubble message={m} />
-          </div>
-        ))}
+        {items.map((item) =>
+          item.kind === 'status' ? (
+            <div key={item.id} className="dr-status-line">
+              <item.icon size={13} strokeWidth={1.8} />
+              <span>{item.text}</span>
+            </div>
+          ) : (
+            <div key={item.message.id} data-message-id={item.message.id}>
+              <MessageBubble message={item.message} />
+            </div>
+          ),
+        )}
         {streaming && (
           <MessageBubble
             message={{

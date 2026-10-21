@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f7f7f8;
+  background: #fff;
 }
 
 .dr-chat-header {
@@ -110,6 +110,23 @@
   margin-bottom: 4px;
 }
 
+.dr-reasoning-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 2px 0;
+  font-size: 12px;
+  color: var(--dr-text-secondary);
+  border-radius: 6px;
+}
+
+.dr-reasoning-toggle:hover {
+  color: var(--dr-text);
+}
+
 .dr-reasoning-body {
   background: #efeff1;
   border-radius: 10px;
@@ -119,6 +136,34 @@
   white-space: pre-wrap;
   max-height: 240px;
   overflow-y: auto;
+}
+
+.dr-status-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--dr-text-secondary);
+  margin: 6px 0;
+}
+
+/* lucide 图标在按钮里垂直居中 */
+.dr-icon-btn,
+.dr-chip,
+.dr-anno-chip,
+.dr-model-btn,
+.dr-send,
+.dr-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.dr-current-origin {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .dr-interrupted {
@@ -486,7 +531,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f7f7f8;
+  background: #fff;
 }
 
 .dr-history-list,

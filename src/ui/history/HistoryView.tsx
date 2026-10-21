@@ -2,6 +2,7 @@
  * 会话历史：按 origin 分组展示；当前 origin 置顶。
  */
 import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, MapPin, Plus, X } from 'lucide-react';
 import type { ConversationMeta } from '../../types';
 import { request } from '../shared/backend';
 
@@ -39,18 +40,26 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
     <div className="dr-history">
       <header className="dr-chat-header">
         <button className="dr-icon-btn" onClick={onBack}>
-          ←
+          <ArrowLeft size={16} strokeWidth={1.8} />
         </button>
         <div className="dr-chat-title">会话历史</div>
-        <button className="dr-icon-btn" onClick={onNew}>
-          ＋ 新会话
+        <button className="dr-icon-btn dr-new-btn" onClick={onNew}>
+          <Plus size={15} strokeWidth={1.8} />
+          新会话
         </button>
       </header>
       <div className="dr-history-list">
         {groups.map(([origin, conversations]) => (
           <div key={origin} className="dr-history-group">
             <div className="dr-history-origin">
-              {origin === currentOrigin ? `📍 ${origin}` : origin}
+              {origin === currentOrigin ? (
+                <span className="dr-current-origin">
+                  <MapPin size={12} strokeWidth={1.8} />
+                  {origin}
+                </span>
+              ) : (
+                origin
+              )}
             </div>
             {conversations.map((c) => (
               <div key={c.id} className="dr-history-item">
@@ -66,7 +75,7 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
                     await reload();
                   }}
                 >
-                  ✕
+                  <X size={14} strokeWidth={1.8} />
                 </button>
               </div>
             ))}
