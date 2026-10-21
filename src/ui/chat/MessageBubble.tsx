@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AnnotationItem } from '../../types';
 import { REPLY_ANNOTATION_RE, splitAnnotationProtocol } from '../../core/annotation/protocol';
+import { extractPseudoThought, PSEUDO_THOUGHT_FALLBACK } from '../../core/prompt/pseudo-thought';
 
 function AnnotationChips({ annotations }: { annotations: AnnotationItem[] }) {
   const [open, setOpen] = useState(false);
@@ -140,8 +141,13 @@ export function MessageBubble({
   message: DisplayMessage;
 }) {
   const [showReasoning, setShowReasoning] = useState(false);
-  // 思维链原文不对用户展示（提示词约束不住草稿纸），只保留一个傲娇占位。
-  const hasReasoning = Boolean(message.reasoning && message.reasoning.length > 0);
+  // 真实思维链原文不对用户展示；展示的是模型按约定输出的「脑回路：」伪思维行。
+  const hasRealReasoning = Boolean(message.reasoning && message.reasoning.length > 0);
+  const { thought, content: body } = useMemo(
+    () => extractPseudoThought(message.text),
+    [message.text],
+  );
+  const showThought = hasRealReasoning || thought !== undefined;
 
   if (message.role === 'user') {
     const { question } = splitAnnotationProtocol(message.text);
@@ -163,7 +169,7 @@ export function MessageBubble({
 
   return (
     <div className="dr-msg dr-msg-assistant">
-      {hasReasoning && (
+      {showThought && (
         <div className="dr-reasoning">
           <button className="dr-reasoning-toggle" onClick={() => setShowReasoning((v) => !v)}>
             {showReasoning ? (
@@ -171,15 +177,15 @@ export function MessageBubble({
             ) : (
               <ChevronRight size={13} strokeWidth={1.8} />
             )}
-            大肥鱼思考过了
+            大肥鱼的脑回路
           </button>
           {showReasoning && (
-            <div className="dr-reasoning-body">脑回路不外借，哼。</div>
+            <div className="dr-reasoning-body">{thought ?? PSEUDO_THOUGHT_FALLBACK}</div>
           )}
         </div>
       )}
       <div className="dr-md">
-        <AssistantContent content={message.text} replyAnnotations={message.replyAnnotations} />
+        <AssistantContent content={body} replyAnnotations={message.replyAnnotations} />
       </div>
       {message.interrupted && <div className="dr-interrupted">（已中断）</div>}
     </div>
