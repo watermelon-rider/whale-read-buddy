@@ -9,7 +9,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AnnotationItem } from '../../types';
 import { REPLY_ANNOTATION_RE, splitAnnotationProtocol } from '../../core/annotation/protocol';
-import { redactReasoning } from '../../core/prompt/redact';
 
 function AnnotationChips({ annotations }: { annotations: AnnotationItem[] }) {
   const [open, setOpen] = useState(false);
@@ -137,17 +136,12 @@ export interface DisplayMessage {
 
 export function MessageBubble({
   message,
-  redactSources = [],
 }: {
   message: DisplayMessage;
-  /** 思维链脱敏源：人设/提示词原文。 */
-  redactSources?: string[];
 }) {
   const [showReasoning, setShowReasoning] = useState(false);
-  const reasoningText = useMemo(
-    () => (message.reasoning ? redactReasoning(message.reasoning, redactSources) : undefined),
-    [message.reasoning, redactSources],
-  );
+  // 思维链原文不对用户展示（提示词约束不住草稿纸），只保留一个傲娇占位。
+  const hasReasoning = Boolean(message.reasoning && message.reasoning.length > 0);
 
   if (message.role === 'user') {
     const { question } = splitAnnotationProtocol(message.text);
@@ -169,7 +163,7 @@ export function MessageBubble({
 
   return (
     <div className="dr-msg dr-msg-assistant">
-      {reasoningText && (
+      {hasReasoning && (
         <div className="dr-reasoning">
           <button className="dr-reasoning-toggle" onClick={() => setShowReasoning((v) => !v)}>
             {showReasoning ? (
@@ -177,9 +171,11 @@ export function MessageBubble({
             ) : (
               <ChevronRight size={13} strokeWidth={1.8} />
             )}
-            大肥鱼的脑回路
+            大肥鱼思考过了
           </button>
-          {showReasoning && <div className="dr-reasoning-body">{reasoningText}</div>}
+          {showReasoning && (
+            <div className="dr-reasoning-body">脑回路不外借，哼。</div>
+          )}
         </div>
       )}
       <div className="dr-md">

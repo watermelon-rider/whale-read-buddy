@@ -39,7 +39,6 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
     reasoningEffort: 'high',
   });
   const [askUser, setAskUser] = useState<{ requestId: string; questions: AskUserQuestion[] } | null>(null);
-  const [redactSources, setRedactSources] = useState<string[]>([]);
   const [title, setTitle] = useState(conversation.title);
   const conversationIdRef = useRef(conversation.id);
   conversationIdRef.current = conversation.id;
@@ -51,17 +50,15 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
     let cancelled = false;
     void (async () => {
       // 三个独立请求并行，缩短首屏。
-      const [snapshot, settings, convPrompt] = await Promise.all([
+      const [snapshot, settings] = await Promise.all([
         request<PanelSnapshot>({ kind: 'loadHistory', conversationId: conversation.id }),
         request<Settings>({ kind: 'getSettings' }),
-        request<string>({ kind: 'getConversationInstruction', conversationId: conversation.id }),
       ]);
       if (cancelled) return;
       setEvents(snapshot.events);
       setQuestion(snapshot.draft.question);
       setAnnotations(snapshot.draft.annotations);
       setModelChoice({ model: settings.model, reasoningEffort: settings.reasoningEffort });
-      setRedactSources([settings.persona, settings.globalInstructions, convPrompt]);
       // 未发送页面批注的高亮恢复。
       if (snapshot.draft.annotations.some((a) => a.source.kind === 'page')) {
         void request({ kind: 'restoreHighlights', conversationId: conversation.id });
@@ -190,7 +187,6 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
         events={events}
         streaming={streaming}
         onAnnotateSelection={addAnnotation}
-        redactSources={redactSources}
       />
       {turn.running && (
         <div className="dr-status">

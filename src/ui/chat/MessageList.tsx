@@ -14,8 +14,6 @@ interface Props {
   events: SessionEvent[];
   streaming: { reasoning: string; content: string } | null;
   onAnnotateSelection: (quote: string, note: string, messageId: string) => void;
-  /** 思维链脱敏源：人设/系统提示词/会话提示词原文。 */
-  redactSources?: string[];
 }
 
 /** 每个会话记住滚动位置：切视图/重开面板都直接定位，不播回底动画。
@@ -114,7 +112,6 @@ export function MessageList({
   events,
   streaming,
   onAnnotateSelection,
-  redactSources,
 }: Props) {
   const items = useMemo(() => toDisplayItems(events), [events]);
   const listRef = useRef<HTMLDivElement>(null);
@@ -182,7 +179,7 @@ export function MessageList({
               </div>
             ) : (
               <div key={item.message.id} data-message-id={item.message.id}>
-                <MessageBubble message={item.message} redactSources={redactSources} />
+                <MessageBubble message={item.message} />
               </div>
             ),
           )}
@@ -194,7 +191,6 @@ export function MessageList({
                 text: streaming.content,
                 ...(streaming.reasoning ? { reasoning: streaming.reasoning } : {}),
               }}
-              redactSources={redactSources}
             />
           )}
         </SelectionAnnotator>
