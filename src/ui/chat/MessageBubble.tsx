@@ -37,8 +37,10 @@ function AnnotationChips({ annotations }: { annotations: AnnotationItem[] }) {
 /**
  * 助手文本渲染：在 Markdown 文本节点内部把「Annotation N：」替换为 hoverable chip。
  * 不按标签切开分段渲染（会把跨段的 **加粗** 等配对切断）。
+ * 另外：CommonMark 规定 closing ** 紧跟 CJK 字符时不闭合（ micromark 无 CJK 扩展），
+ * 因此在文本节点里手动处理 ** 配对加粗。
  */
-function AssistantContent({
+export function AssistantContent({
   content,
   replyAnnotations,
 }: {
@@ -46,30 +48,54 @@ function AssistantContent({
   replyAnnotations?: AnnotationItem[];
 }) {
   const components = useMemo(() => {
+    /** 文本片段内的 Annotation chip 替换。 */
+    const annoChips = (text: string, keyPrefix: string): ReactNode[] => {
+      if (!replyAnnotations || !/Annotation\s+\d+\s*[：:]/.test(text)) return [text];
+      const parts: ReactNode[] = [];
+      let last = 0;
+      let key = 0;
+      for (const match of text.matchAll(REPLY_ANNOTATION_RE)) {
+        const at = match.index;
+        if (at > last) parts.push(text.slice(last, at));
+        const anno = replyAnnotations.find((a) => a.index === Number(match[1]));
+        parts.push(
+          <span
+            key={`${keyPrefix}-${key++}`}
+            className="dr-chip dr-reply-anno"
+            title={anno ? `「${anno.quote}」\n批注：${anno.note || '（无）'}` : undefined}
+          >
+            Annotation {match[1]}：
+          </span>,
+        );
+        last = at + match[0].length;
+      }
+      if (last < text.length) parts.push(text.slice(last));
+      return parts;
+    };
+
+    /** 手动处理 **加粗** 配对（CJK 相邻时 micromark 不闭合），段内再做 chip 替换。 */
+    const renderText = (text: string, keyPrefix: string): ReactNode[] => {
+      if (!text.includes('**')) return annoChips(text, keyPrefix);
+      const segments = text.split('**');
+      const out: ReactNode[] = [];
+      segments.forEach((seg, i) => {
+        const isLast = i === segments.length - 1;
+        if (i % 2 === 1 && !isLast) {
+          out.push(<strong key={`${keyPrefix}-b${i}`}>{annoChips(seg, `${keyPrefix}-b${i}`)}</strong>);
+        } else {
+          // 未配对的落回普通文本（补还原 ** 分隔符）。
+          const literal = i % 2 === 1 ? `**${seg}` : seg;
+          if (literal) out.push(...annoChips(literal, `${keyPrefix}-t${i}`));
+        }
+      });
+      return out;
+    };
+
     const withChips = (children: ReactNode): ReactNode =>
       Children.map(children, (child) => {
         if (typeof child !== 'string') return child;
-        if (!replyAnnotations || !/Annotation\s+\d+\s*[：:]/.test(child)) return child;
-        const parts: ReactNode[] = [];
-        let last = 0;
-        let key = 0;
-        for (const match of child.matchAll(REPLY_ANNOTATION_RE)) {
-          const at = match.index;
-          if (at > last) parts.push(child.slice(last, at));
-          const anno = replyAnnotations.find((a) => a.index === Number(match[1]));
-          parts.push(
-            <span
-              key={key++}
-              className="dr-chip dr-reply-anno"
-              title={anno ? `「${anno.quote}」\n批注：${anno.note || '（无）'}` : undefined}
-            >
-              Annotation {match[1]}：
-            </span>,
-          );
-          last = at + match[0].length;
-        }
-        if (last < child.length) parts.push(child.slice(last));
-        return parts;
+        const rendered = renderText(child, 'x');
+        return rendered.length === 1 ? rendered[0] : rendered;
       });
 
     const wrap = (Tag: 'p' | 'li' | 'strong' | 'em' | 'td' | 'th' | 'h1' | 'h2' | 'h3') => {

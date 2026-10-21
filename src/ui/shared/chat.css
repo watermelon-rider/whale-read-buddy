@@ -70,7 +70,11 @@
 }
 
 .dr-msg {
-  margin-bottom: 14px;
+  margin-bottom: 6px;
+}
+
+.dr-msg-user {
+  margin-top: 10px;
 }
 
 .dr-msg-user {
