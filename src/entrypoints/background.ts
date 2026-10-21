@@ -19,6 +19,7 @@ import {
   saveSiteInstruction,
 } from '../services/storage/settings';
 import type { PanelEvent, PanelRequest, PanelSnapshot } from '../types/protocol';
+import type { AnnotationItem } from '../types';
 
 export default defineBackground(() => {
   // 点工具栏图标打开 side panel。
@@ -57,8 +58,20 @@ export default defineBackground(() => {
     port.onDisconnect.addListener(() => panelPorts.delete(port));
   });
 
+  const PANEL_REQUEST_KINDS = new Set([
+    'openConversation', 'newConversation', 'sendMessage', 'cancelTurn', 'listConversations',
+    'deleteConversation', 'loadHistory', 'saveDraft', 'loadDraft', 'restoreHighlights',
+    'getSettings', 'saveSettings', 'getSiteInstruction', 'saveSiteInstruction',
+    'listSiteInstructions', 'answerAskUser',
+  ]);
+
   chrome.runtime.onMessage.addListener((raw: PanelRequest, sender, sendResponse) => {
-    void handleRequest(raw, sender).then(sendResponse);
+    // 只处理面板请求；content script 的上报由下方另一个监听器接管。
+    if (!PANEL_REQUEST_KINDS.has((raw as { kind: string }).kind)) return false;
+    void handleRequest(raw, sender).then(
+      sendResponse,
+      (err) => sendResponse({ error: String(err instanceof Error ? err.message : err) }),
+    );
     return true; // 异步响应
   });
 
@@ -111,19 +124,13 @@ export default defineBackground(() => {
       }
       case 'saveDraft':
         await saveDraft(req.conversationId, req.question, req.annotations);
+        await syncHighlightsToActiveTab(req.annotations);
         return { ok: true };
       case 'loadDraft':
         return (await loadDraft(req.conversationId)) ?? { question: '', annotations: [] };
       case 'restoreHighlights': {
         const draft = await loadDraft(req.conversationId);
-        const pageAnnotations = (draft?.annotations ?? []).filter((a) => a.source.kind === 'page');
-        if (pageAnnotations.length === 0) return { ok: true };
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab?.id) {
-          await chrome.tabs
-            .sendMessage(tab.id, { kind: 'restoreHighlights', annotations: pageAnnotations })
-            .catch(() => {});
-        }
+        await syncHighlightsToActiveTab(draft?.annotations ?? []);
         return { ok: true };
       }
       case 'getSettings':
@@ -146,10 +153,37 @@ export default defineBackground(() => {
     }
   }
 
-  // content script 上报的页面划词，广播给 side panel（由面板加入当前会话草稿 chip 列表）。
+  // 把页面批注草稿同步高亮到当前标签页的 content script。
+  async function syncHighlightsToActiveTab(annotations: AnnotationItem[]): Promise<void> {
+    const pageAnnotations = annotations.filter((a) => a.source.kind === 'page');
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      await chrome.tabs
+        .sendMessage(tab.id, { kind: 'syncHighlights', annotations: pageAnnotations })
+        .catch(() => {});
+    }
+  }
+
+  // content script 上报的页面划词批注：写入当前会话草稿（background 是草稿的唯一写入口），
+  // 广播给 side panel，并把最新列表回同步给页面重画高亮。
   chrome.runtime.onMessage.addListener((raw) => {
-    const report = raw as { kind: string; quote?: string };
-    if (report.kind !== 'pageSelected' || typeof report.quote !== 'string') return;
-    emit({ kind: 'pageAnnotationCandidate', quote: report.quote });
+    const report = raw as { kind: string; quote?: string; note?: string };
+    if (typeof report.quote !== 'string') return;
+    if (report.kind === 'pageSelected') {
+      void manager
+        .addPageAnnotation(report.quote, report.note ?? '')
+        .then(() => resyncCurrentDraft());
+    } else if (report.kind === 'pageAnnotationUpdated') {
+      void manager.updatePageAnnotation(report.quote, report.note ?? '');
+    } else if (report.kind === 'pageAnnotationRemoved') {
+      void manager.removePageAnnotation(report.quote).then(() => resyncCurrentDraft());
+    }
   });
+
+  async function resyncCurrentDraft(): Promise<void> {
+    const id = manager.currentConversationId;
+    if (!id) return;
+    const draft = await loadDraft(id);
+    await syncHighlightsToActiveTab(draft?.annotations ?? []);
+  }
 });

@@ -202,7 +202,7 @@ turn 开始
 ### 6.1 交互闭环
 
 ```
-页面/对话内划词 → 工具条「批注」→ 写批注（可为空）→ 批注进入 chip 列表
+页面/对话内划词 →「批注」按钮 → 原地编辑卡片（引用 + 输入框 + ✓）→ 回车/打勾确认
     → 输入框旁「批注 ×N」chip（hover 查看 / 逐条删除）
     → Enter：批注协议块 + 提问正文一起发送
     → 模型按「Annotation 1：…」「Annotation 2：…」逐条回应
@@ -210,6 +210,8 @@ turn 开始
 ```
 
 - 两条采集管道：页面划词（content script）、对话消息划词（side panel 内），汇入同一 chip 列表。
+- 原地编辑卡片为 Codex 风格；页面侧点击已有高亮/编号标记可进入编辑模式（改批注或删除）。
+- 批注草稿的唯一写入口是 background：content script 上报 → 写 IndexedDB → 广播面板 → 回同步页面重画高亮（canonical index 一致）。
 - IME 安全：Enter 拦截带 `isComposing` / keyCode 229 守卫。
 - 发送后批注块在用户气泡中只显示 chip，不显示协议文本（协议块仅模型可见）。
 

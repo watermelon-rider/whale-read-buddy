@@ -25,7 +25,7 @@ import {
   persistEvent,
   upsertConversation,
 } from './storage/sessions';
-import { clearDraft } from './storage/drafts';
+import { clearDraft, loadDraft, saveDraft } from './storage/drafts';
 import { loadSettings, loadSiteInstruction } from './storage/settings';
 import { extractPageForTab } from './extract-service';
 import type { PanelEvent } from '../types/protocol';
@@ -46,6 +46,8 @@ interface PendingAsk {
 export class ConversationManager {
   private live = new Map<string, LiveConversation>();
   private pendingAsks = new Map<string, PendingAsk>();
+  /** 最近打开的会话（页面批注草稿的归属）。 */
+  currentConversationId?: string;
 
   constructor(private readonly emit: (event: PanelEvent) => void) {}
 
@@ -55,6 +57,7 @@ export class ConversationManager {
     const existing = await listConversationsByOrigin(origin);
     if (existing.length > 0 && existing[0]) {
       await this.ensureLive(existing[0].id);
+      this.currentConversationId = existing[0].id;
       return existing[0];
     }
     return this.createConversation(url);
@@ -70,7 +73,47 @@ export class ConversationManager {
     };
     await upsertConversation(meta);
     await this.ensureLive(meta.id);
+    this.currentConversationId = meta.id;
     return meta;
+  }
+
+  /** 页面划词批注进入当前会话草稿（canonical index 在此分配）。 */
+  async addPageAnnotation(quote: string, note: string): Promise<AnnotationItem[]> {
+    const conversationId = this.currentConversationId;
+    if (!conversationId) return [];
+    const draft = await loadDraft(conversationId);
+    const annotations = draft?.annotations ?? [];
+    const next: AnnotationItem[] = [
+      ...annotations,
+      { index: annotations.length + 1, quote, note, source: { kind: 'page' } },
+    ];
+    await saveDraft(conversationId, draft?.question ?? '', next);
+    this.emit({ kind: 'draftUpdated', conversationId, annotations: next });
+    return next;
+  }
+
+  async updatePageAnnotation(quote: string, note: string): Promise<void> {
+    const conversationId = this.currentConversationId;
+    if (!conversationId) return;
+    const draft = await loadDraft(conversationId);
+    if (!draft) return;
+    const next = draft.annotations.map((a) =>
+      a.source.kind === 'page' && a.quote === quote ? { ...a, note } : a,
+    );
+    await saveDraft(conversationId, draft.question, next);
+    this.emit({ kind: 'draftUpdated', conversationId, annotations: next });
+  }
+
+  async removePageAnnotation(quote: string): Promise<void> {
+    const conversationId = this.currentConversationId;
+    if (!conversationId) return;
+    const draft = await loadDraft(conversationId);
+    if (!draft) return;
+    const next = draft.annotations
+      .filter((a) => !(a.source.kind === 'page' && a.quote === quote))
+      .map((a, i) => ({ ...a, index: i + 1 }));
+    await saveDraft(conversationId, draft.question, next);
+    this.emit({ kind: 'draftUpdated', conversationId, annotations: next });
   }
 
   async ensureLive(conversationId: string): Promise<LiveConversation> {

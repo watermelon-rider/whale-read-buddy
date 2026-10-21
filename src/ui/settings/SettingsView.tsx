@@ -3,7 +3,7 @@
  * API key 仅存 chrome.storage.local，从不上 sync。
  */
 import { useEffect, useState } from 'react';
-import type { ModelId, Settings } from '../../types';
+import type { Settings } from '../../types';
 import { request } from '../shared/backend';
 
 interface Props {
@@ -67,37 +67,6 @@ export function SettingsView({ currentOrigin, onBack }: Props) {
             value={settings.toolsBaseURL}
             onChange={(e) => patch({ toolsBaseURL: e.target.value })}
           />
-        </label>
-        <label className="dr-field">
-          <span>模型</span>
-          <select
-            value={settings.model}
-            onChange={(e) => patch({ model: e.target.value as ModelId })}
-          >
-            <option value="deepseek-flash">deepseek-flash（快，支持视觉）</option>
-            <option value="deepseek-v4-pro">deepseek-v4-pro（更深，更贵）</option>
-          </select>
-        </label>
-        <label className="dr-field dr-field-inline">
-          <input
-            type="checkbox"
-            checked={settings.thinkingEnabled}
-            onChange={(e) => patch({ thinkingEnabled: e.target.checked })}
-          />
-          <span>默认开启思考模式</span>
-        </label>
-        <label className="dr-field">
-          <span>思考强度</span>
-          <select
-            value={settings.reasoningEffort}
-            onChange={(e) =>
-              patch({ reasoningEffort: e.target.value as Settings['reasoningEffort'] })
-            }
-          >
-            <option value="low">low（快）</option>
-            <option value="high">high（默认）</option>
-            <option value="max">max（最深）</option>
-          </select>
         </label>
         <label className="dr-field">
           <span>陪读人设（persona，留空用默认）</span>

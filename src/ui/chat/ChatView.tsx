@@ -6,11 +6,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SessionEvent } from '../../core/session/events';
 import type { AskUserQuestion } from '../../core/agent/tools';
 import type { StreamDelta } from '../../core/llm/stream';
-import type { AnnotationItem, ConversationMeta } from '../../types';
+import type { AnnotationItem, ConversationMeta, Settings } from '../../types';
 import type { PanelSnapshot } from '../../types/protocol';
 import { connectPanelEvents, request } from '../shared/backend';
 import { AskUserCard } from './AskUserCard';
-import { Composer } from './Composer';
+import { Composer, type ModelChoice } from './Composer';
 import { MessageList } from './MessageList';
 
 interface Props {
@@ -32,7 +32,10 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
   const [turn, setTurn] = useState<TurnState>({ running: false });
   const [question, setQuestion] = useState('');
   const [annotations, setAnnotations] = useState<AnnotationItem[]>([]);
-  const [thinkingEnabled, setThinkingEnabled] = useState(true);
+  const [modelChoice, setModelChoice] = useState<ModelChoice>({
+    model: 'deepseek-flash',
+    reasoningEffort: 'high',
+  });
   const [askUser, setAskUser] = useState<{ requestId: string; questions: AskUserQuestion[] } | null>(null);
   const conversationIdRef = useRef(conversation.id);
   conversationIdRef.current = conversation.id;
@@ -46,8 +49,10 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
       setEvents(snapshot.events);
       setQuestion(snapshot.draft.question);
       setAnnotations(snapshot.draft.annotations);
-      const settings = await request<{ thinkingEnabled: boolean }>({ kind: 'getSettings' });
-      if (!cancelled) setThinkingEnabled(settings.thinkingEnabled);
+      const settings = await request<Settings>({ kind: 'getSettings' });
+      if (!cancelled) {
+        setModelChoice({ model: settings.model, reasoningEffort: settings.reasoningEffort });
+      }
       // 未发送页面批注的高亮恢复。
       if (snapshot.draft.annotations.some((a) => a.source.kind === 'page')) {
         await request({ kind: 'restoreHighlights', conversationId: conversation.id });
@@ -91,8 +96,10 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
           if (event.conversationId !== conversationIdRef.current) return;
           setAskUser({ requestId: event.requestId, questions: event.questions });
           break;
-        case 'pageAnnotationCandidate':
-          addAnnotation(event.quote, { kind: 'page' });
+        case 'draftUpdated':
+          // 页面侧批注（新增/编辑/删除）由 background 写草稿后广播，面板以草稿为准。
+          if (event.conversationId !== conversationIdRef.current) return;
+          setAnnotations(event.annotations);
           break;
         default:
           break;
@@ -101,8 +108,11 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
   }, []);
 
   const addAnnotation = useCallback(
-    (quote: string, source: AnnotationItem['source']) => {
-      setAnnotations((prev) => [...prev, { index: prev.length + 1, quote, note: '', source }]);
+    (quote: string, note: string, messageId: string) => {
+      setAnnotations((prev) => [
+        ...prev,
+        { index: prev.length + 1, quote, note, source: { kind: 'chat', messageId } },
+      ]);
     },
     [],
   );
@@ -131,9 +141,18 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
       conversationId: conversation.id,
       question: q,
       annotations: anns,
-      thinkingEnabled,
+      thinkingEnabled: true, // 思维链常开，不暴露开关
     });
-  }, [question, annotations, thinkingEnabled, conversation.id]);
+  }, [question, annotations, conversation.id]);
+
+  const handleModelChoiceChange = useCallback(async (choice: ModelChoice) => {
+    setModelChoice(choice);
+    const settings = await request<Settings>({ kind: 'getSettings' });
+    await request({
+      kind: 'saveSettings',
+      settings: { ...settings, model: choice.model, reasoningEffort: choice.reasoningEffort },
+    });
+  }, []);
 
   return (
     <div className="dr-chat">
@@ -151,7 +170,7 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
       <MessageList
         events={events}
         streaming={streaming}
-        onAnnotateSelection={(quote, messageId) => addAnnotation(quote, { kind: 'chat', messageId })}
+        onAnnotateSelection={addAnnotation}
       />
       {turn.running && (
         <div className="dr-status">
@@ -171,11 +190,11 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
       <Composer
         question={question}
         annotations={annotations}
-        thinkingEnabled={thinkingEnabled}
         running={turn.running}
+        modelChoice={modelChoice}
         onQuestionChange={setQuestion}
         onAnnotationsChange={setAnnotations}
-        onThinkingChange={setThinkingEnabled}
+        onModelChoiceChange={(c) => void handleModelChoiceChange(c)}
         onSend={() => void handleSend()}
         onCancel={() => void request({ kind: 'cancelTurn', conversationId: conversation.id })}
       />

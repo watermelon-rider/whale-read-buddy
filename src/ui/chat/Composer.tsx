@@ -1,28 +1,51 @@
 /**
- * 输入区：批注 chip 列表 + 文本框 + 思考模式开关 + 发送/停止。
- * IME 安全：Enter 发送带 isComposing 守卫；Shift+Enter 换行。
+ * Codex 风格输入卡片：圆角卡片内嵌无边框输入区，底行左侧批注 chip，
+ * 右侧模型选择器 + 黑色圆形发送按钮。思维链常开（不暴露开关）。
  */
-import { useState, type KeyboardEvent } from 'react';
-import type { AnnotationItem } from '../../types';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import type { AnnotationItem, ModelId, Settings } from '../../types';
+
+export interface ModelChoice {
+  model: ModelId;
+  reasoningEffort: Settings['reasoningEffort'];
+}
+
+const MODEL_OPTIONS: Array<{ choice: ModelChoice; label: string }> = [
+  { choice: { model: 'deepseek-flash', reasoningEffort: 'low' }, label: 'deepseek-flash 低' },
+  { choice: { model: 'deepseek-flash', reasoningEffort: 'high' }, label: 'deepseek-flash 高' },
+  { choice: { model: 'deepseek-flash', reasoningEffort: 'max' }, label: 'deepseek-flash 最深' },
+  { choice: { model: 'deepseek-v4-pro', reasoningEffort: 'low' }, label: 'deepseek-v4-pro 低' },
+  { choice: { model: 'deepseek-v4-pro', reasoningEffort: 'high' }, label: 'deepseek-v4-pro 高' },
+  { choice: { model: 'deepseek-v4-pro', reasoningEffort: 'max' }, label: 'deepseek-v4-pro 最深' },
+];
+
+const EFFORT_LABEL: Record<Settings['reasoningEffort'], string> = {
+  low: '低',
+  high: '高',
+  max: '最深',
+};
 
 interface Props {
   question: string;
   annotations: AnnotationItem[];
-  thinkingEnabled: boolean;
   running: boolean;
+  modelChoice: ModelChoice;
   onQuestionChange: (q: string) => void;
   onAnnotationsChange: (items: AnnotationItem[]) => void;
-  onThinkingChange: (enabled: boolean) => void;
+  onModelChoiceChange: (choice: ModelChoice) => void;
   onSend: () => void;
   onCancel: () => void;
 }
 
 export function Composer(props: Props) {
   const [showAnnotations, setShowAnnotations] = useState(false);
+  const [showModelMenu, setShowModelMenu] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editNote, setEditNote] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const canSend = !props.running && (props.question.trim().length > 0 || props.annotations.length > 0);
+  const canSend =
+    !props.running && (props.question.trim().length > 0 || props.annotations.length > 0);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     // IME 组词中不触发发送（isComposing / keyCode 229 守卫）。
@@ -32,6 +55,14 @@ export function Composer(props: Props) {
     }
   };
 
+  // 自动高度。
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+  }, [props.question]);
+
   const updateNote = (index: number, note: string) => {
     props.onAnnotationsChange(
       props.annotations.map((a) => (a.index === index ? { ...a, note } : a)),
@@ -39,92 +70,132 @@ export function Composer(props: Props) {
   };
 
   return (
-    <div className="dr-composer">
-      {props.annotations.length > 0 && (
-        <div className="dr-anno-bar">
-          <button className="dr-chip" onClick={() => setShowAnnotations((v) => !v)}>
-            批注 ×{props.annotations.length}
-          </button>
-          {showAnnotations && (
-            <div className="dr-anno-list">
-              {props.annotations.map((a) => (
-                <div key={a.index} className="dr-anno-item">
-                  <div className="dr-anno-quote" title={a.quote}>
-                    #{a.index} 「{a.quote.length > 60 ? `${a.quote.slice(0, 60)}…` : a.quote}」
-                  </div>
-                  {editingIndex === a.index ? (
-                    <input
-                      autoFocus
-                      value={editNote}
-                      placeholder="写点批注…"
-                      onChange={(e) => setEditNote(e.target.value)}
-                      onBlur={() => {
-                        updateNote(a.index, editNote);
-                        setEditingIndex(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-                          updateNote(a.index, editNote);
-                          setEditingIndex(null);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <button
-                      className="dr-icon-btn"
-                      onClick={() => {
-                        setEditingIndex(a.index);
-                        setEditNote(a.note);
-                      }}
-                    >
-                      {a.note || '添加批注'}
-                    </button>
-                  )}
-                  <button
-                    className="dr-icon-btn"
-                    title="删除"
-                    onClick={() =>
-                      props.onAnnotationsChange(
-                        props.annotations
-                          .filter((x) => x.index !== a.index)
-                          .map((x, i) => ({ ...x, index: i + 1 })),
-                      )
-                    }
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+    <div className="dr-composer-card">
       <textarea
+        ref={textareaRef}
         className="dr-input"
         placeholder="就当前页面提问…（选中页面或对话文字可添加批注）"
         value={props.question}
-        rows={3}
+        rows={1}
         onChange={(e) => props.onQuestionChange(e.target.value)}
         onKeyDown={handleKeyDown}
       />
       <div className="dr-composer-footer">
-        <label className="dr-thinking-toggle" title="思考模式：先输出思维链再给答案，更深入但更慢">
-          <input
-            type="checkbox"
-            checked={props.thinkingEnabled}
-            onChange={(e) => props.onThinkingChange(e.target.checked)}
-          />
-          思考模式
-        </label>
-        {props.running ? (
-          <button className="dr-icon-btn" onClick={props.onCancel}>
-            ■ 停止
-          </button>
-        ) : (
-          <button className="dr-primary-btn" disabled={!canSend} onClick={props.onSend}>
-            发送
-          </button>
-        )}
+        <div className="dr-footer-left">
+          {props.annotations.length > 0 && (
+            <div className="dr-anno-anchor">
+              <button
+                className="dr-anno-chip"
+                onClick={() => setShowAnnotations((v) => !v)}
+                title="查看 / 编辑批注"
+              >
+                <span className="dr-anno-chip-icon">💬</span>
+                批注 ×{props.annotations.length}
+              </button>
+              {showAnnotations && (
+                <div className="dr-anno-list">
+                  {props.annotations.map((a) => (
+                    <div key={a.index} className="dr-anno-item">
+                      <div className="dr-anno-quote" title={a.quote}>
+                        #{a.index}「{a.quote.length > 50 ? `${a.quote.slice(0, 50)}…` : a.quote}」
+                      </div>
+                      {editingIndex === a.index ? (
+                        <input
+                          autoFocus
+                          className="dr-anno-edit"
+                          value={editNote}
+                          placeholder="写点批注…"
+                          onChange={(e) => setEditNote(e.target.value)}
+                          onBlur={() => {
+                            updateNote(a.index, editNote.trim());
+                            setEditingIndex(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                              updateNote(a.index, editNote.trim());
+                              setEditingIndex(null);
+                            }
+                            if (e.key === 'Escape') setEditingIndex(null);
+                          }}
+                        />
+                      ) : (
+                        <button
+                          className="dr-anno-note-btn"
+                          onClick={() => {
+                            setEditingIndex(a.index);
+                            setEditNote(a.note);
+                          }}
+                        >
+                          {a.note || '添加批注'}
+                        </button>
+                      )}
+                      <button
+                        className="dr-anno-del"
+                        title="删除"
+                        onClick={() =>
+                          props.onAnnotationsChange(
+                            props.annotations
+                              .filter((x) => x.index !== a.index)
+                              .map((x, i) => ({ ...x, index: i + 1 })),
+                          )
+                        }
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="dr-footer-right">
+          <div className="dr-model-anchor">
+            <button
+              className="dr-model-btn"
+              onClick={() => setShowModelMenu((v) => !v)}
+              title="选择模型与思考强度"
+            >
+              {props.modelChoice.model} {EFFORT_LABEL[props.modelChoice.reasoningEffort]}
+              <span className="dr-model-caret">⌄</span>
+            </button>
+            {showModelMenu && (
+              <div className="dr-model-menu">
+                {MODEL_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.label}
+                    className={`dr-model-option${
+                      opt.choice.model === props.modelChoice.model &&
+                      opt.choice.reasoningEffort === props.modelChoice.reasoningEffort
+                        ? ' active'
+                        : ''
+                    }`}
+                    onClick={() => {
+                      props.onModelChoiceChange(opt.choice);
+                      setShowModelMenu(false);
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {props.running ? (
+            <button className="dr-send" onClick={props.onCancel} title="停止">
+              ■
+            </button>
+          ) : (
+            <button
+              className="dr-send"
+              disabled={!canSend}
+              onClick={props.onSend}
+              title="发送（Enter）"
+            >
+              ↑
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

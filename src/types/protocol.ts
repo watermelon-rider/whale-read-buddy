@@ -30,19 +30,21 @@ export type PanelEvent =
   | { kind: 'streamDelta'; conversationId: string; delta: StreamDelta }
   | { kind: 'turnState'; conversationId: string; state: 'running' | 'idle'; step?: number; toolNames?: string[]; error?: string }
   | { kind: 'sessionEvent'; conversationId: string; event: SessionEvent }
-  | { kind: 'pageAnnotationCandidate'; quote: string }
+  | { kind: 'draftUpdated'; conversationId: string; annotations: AnnotationItem[] }
   | { kind: 'askUser'; conversationId: string; requestId: string; questions: AskUserQuestion[] }
   | { kind: 'pageContext'; conversationId: string; page: PageContent };
 
 /** side panel → content script（经 background 中转）。 */
 export type ContentRequest =
   | { kind: 'extractPage' }
-  | { kind: 'restoreHighlights'; annotations: AnnotationItem[] };
+  | { kind: 'syncHighlights'; annotations: AnnotationItem[] };
 
 /** content script → background 上报。 */
 export type ContentReport =
   | { kind: 'pageExtracted'; page: PageContent }
-  | { kind: 'pageSelected'; quote: string }
+  | { kind: 'pageSelected'; quote: string; note: string }
+  | { kind: 'pageAnnotationUpdated'; quote: string; note: string }
+  | { kind: 'pageAnnotationRemoved'; quote: string }
   | { kind: 'extractionFailed'; error: string };
 
 export interface PanelSnapshot {

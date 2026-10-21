@@ -1,8 +1,9 @@
-/* 聊天区样式（参考 dsh web chat，收窄适配 side panel）。 */
+/* 聊天区样式（抄 Codex：浅色底、浅灰用户气泡、圆角输入卡片、黑色圆形发送键）。 */
 .dr-chat {
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: #f7f7f8;
 }
 
 .dr-chat-header {
@@ -10,6 +11,7 @@
   align-items: center;
   gap: 4px;
   padding: 8px 10px;
+  background: #fff;
   border-bottom: 1px solid var(--dr-border);
 }
 
@@ -26,18 +28,18 @@
 .dr-msg-list {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 10px;
+  padding: 14px 12px;
 }
 
 .dr-empty {
   color: var(--dr-text-secondary);
   font-size: 13px;
-  padding: 24px 16px;
+  padding: 32px 20px;
   text-align: center;
 }
 
 .dr-msg {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .dr-msg-user {
@@ -46,10 +48,10 @@
 }
 
 .dr-msg-user .dr-bubble {
-  background: var(--dr-user-bubble);
-  border-radius: var(--dr-radius);
-  padding: 8px 12px;
-  max-width: 90%;
+  background: #efeff1;
+  border-radius: 18px;
+  padding: 9px 14px;
+  max-width: 92%;
 }
 
 .dr-plain {
@@ -61,6 +63,10 @@
   color: var(--dr-text-secondary);
 }
 
+.dr-msg-assistant {
+  padding: 0 2px;
+}
+
 .dr-msg-assistant .dr-md {
   font-size: 14px;
 }
@@ -70,9 +76,9 @@
 }
 
 .dr-md pre {
-  background: var(--dr-bg-subtle);
-  padding: 8px;
-  border-radius: 6px;
+  background: #efeff1;
+  padding: 8px 10px;
+  border-radius: 10px;
   overflow-x: auto;
   font-size: 12px;
 }
@@ -93,14 +99,21 @@
   font-size: 13px;
 }
 
+.dr-md blockquote {
+  margin: 4px 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--dr-border);
+  color: var(--dr-text-secondary);
+}
+
 .dr-reasoning {
   margin-bottom: 4px;
 }
 
 .dr-reasoning-body {
-  background: var(--dr-bg-subtle);
-  border-left: 3px solid var(--dr-border);
-  padding: 6px 10px;
+  background: #efeff1;
+  border-radius: 10px;
+  padding: 8px 12px;
   font-size: 12px;
   color: var(--dr-text-secondary);
   white-space: pre-wrap;
@@ -114,18 +127,18 @@
 }
 
 .dr-status {
-  padding: 4px 12px;
+  padding: 4px 14px;
   font-size: 12px;
   color: var(--dr-text-secondary);
 }
 
 .dr-error {
-  padding: 6px 12px;
+  padding: 6px 14px;
   font-size: 12px;
   color: var(--dr-danger);
 }
 
-/* 批注 chip 与弹层 */
+/* 批注 chip（Codex 蓝色数字圆点风格） */
 .dr-anno-chips {
   position: relative;
   margin-left: 8px;
@@ -134,15 +147,15 @@
 .dr-anno-pop,
 .dr-anno-list {
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + 6px);
   left: 0;
   z-index: 20;
-  background: var(--dr-bg);
+  background: #fff;
   border: 1px solid var(--dr-border);
-  border-radius: var(--dr-radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   padding: 8px;
-  width: 260px;
+  width: 280px;
   max-height: 240px;
   overflow-y: auto;
 }
@@ -157,11 +170,12 @@
 .dr-anno-item {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .dr-anno-quote {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -173,58 +187,249 @@
   margin-top: 2px;
 }
 
+.dr-anno-note-btn {
+  border: none;
+  background: transparent;
+  color: var(--dr-accent);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dr-anno-edit {
+  flex: 1;
+  border: 1px solid var(--dr-border);
+  border-radius: 6px;
+  padding: 3px 6px;
+  font-size: 12px;
+}
+
+.dr-anno-del {
+  border: none;
+  background: transparent;
+  color: var(--dr-text-secondary);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.dr-anno-del:hover {
+  color: var(--dr-danger);
+}
+
 .dr-reply-anno {
   margin: 0 2px;
 }
 
-/* 输入区 */
-.dr-composer {
-  border-top: 1px solid var(--dr-border);
-  padding: 8px 10px;
-}
-
-.dr-anno-bar {
-  position: relative;
-  margin-bottom: 6px;
+/* Codex 风格输入卡片 */
+.dr-composer-card {
+  margin: 8px 10px 12px;
+  background: #fff;
+  border: 1px solid #e3e3e6;
+  border-radius: 24px;
+  padding: 12px 14px 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .dr-input {
   width: 100%;
-  border: 1px solid var(--dr-border);
-  border-radius: var(--dr-radius);
-  padding: 8px 10px;
+  border: none;
+  outline: none;
+  resize: none;
   font-family: inherit;
   font-size: 14px;
-  resize: none;
+  line-height: 1.5;
+  background: transparent;
+  color: var(--dr-text);
+  padding: 0;
 }
 
-.dr-input:focus {
-  outline: 2px solid var(--dr-accent-soft);
-  border-color: var(--dr-accent);
+.dr-input::placeholder {
+  color: #9ca3af;
 }
 
 .dr-composer-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
-.dr-thinking-toggle {
+.dr-footer-left,
+.dr-footer-right {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
+  gap: 6px;
+}
+
+.dr-anno-anchor,
+.dr-model-anchor {
+  position: relative;
+}
+
+.dr-anno-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: transparent;
   color: var(--dr-text-secondary);
+  font-size: 13px;
   cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.dr-anno-chip:hover {
+  background: #efeff1;
+}
+
+.dr-model-btn {
+  border: none;
+  background: transparent;
+  color: var(--dr-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 8px;
+}
+
+.dr-model-btn:hover {
+  background: #efeff1;
+}
+
+.dr-model-caret {
+  margin-left: 2px;
+  font-size: 11px;
+}
+
+.dr-model-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  background: #fff;
+  border: 1px solid var(--dr-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  padding: 4px;
+  min-width: 190px;
+}
+
+.dr-model-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--dr-text);
+}
+
+.dr-model-option:hover {
+  background: #efeff1;
+}
+
+.dr-model-option.active {
+  color: var(--dr-accent);
+  font-weight: 600;
+}
+
+.dr-send {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #1f2329;
+  color: #fff;
+  font-size: 16px;
+  line-height: 32px;
+  text-align: center;
+  cursor: pointer;
+  flex: none;
+}
+
+.dr-send:disabled {
+  background: #d1d5db;
+  cursor: default;
+}
+
+/* 划词批注按钮与原地编辑卡片（side panel 内） */
+.dr-sel-toolbar {
+  position: absolute;
+  z-index: 25;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 999px;
+  background: #1f2329;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dr-sel-card {
+  position: absolute;
+  z-index: 25;
+  width: 300px;
+  background: #fff;
+  border: 1px solid var(--dr-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.14);
+  padding: 10px 12px;
+}
+
+.dr-sel-quote {
+  max-height: 40px;
+  overflow: hidden;
+  color: var(--dr-text-secondary);
+  font-size: 12px;
+  border-left: 3px solid var(--dr-accent);
+  padding-left: 8px;
+  margin-bottom: 6px;
+}
+
+.dr-sel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dr-sel-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.dr-sel-ok {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: #1f2329;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  flex: none;
 }
 
 /* ask_user 卡片 */
 .dr-ask-card {
-  margin: 8px 10px;
-  border: 1px solid var(--dr-accent);
-  border-radius: var(--dr-radius);
-  padding: 10px;
+  margin: 8px 12px;
+  background: #fff;
+  border: 1px solid var(--dr-border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .dr-ask-title {
@@ -253,9 +458,9 @@
 
 .dr-ask-option {
   border: 1px solid var(--dr-border);
-  background: var(--dr-bg);
-  border-radius: 6px;
-  padding: 4px 10px;
+  background: #fff;
+  border-radius: 999px;
+  padding: 5px 12px;
   font-size: 13px;
   cursor: pointer;
 }
@@ -270,8 +475,8 @@
   width: 100%;
   margin-top: 6px;
   border: 1px solid var(--dr-border);
-  border-radius: 6px;
-  padding: 4px 8px;
+  border-radius: 8px;
+  padding: 5px 8px;
   font-size: 13px;
 }
 
@@ -281,13 +486,14 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: #f7f7f8;
 }
 
 .dr-history-list,
 .dr-settings-body {
   flex: 1;
   overflow-y: auto;
-  padding: 10px;
+  padding: 10px 12px;
 }
 
 .dr-history-origin {
@@ -306,9 +512,9 @@
   flex: 1;
   text-align: left;
   border: 1px solid var(--dr-border);
-  border-radius: var(--dr-radius);
-  background: var(--dr-bg);
-  padding: 8px 10px;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px 12px;
   cursor: pointer;
 }
 
@@ -340,10 +546,11 @@
 .dr-field select,
 .dr-field textarea {
   border: 1px solid var(--dr-border);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 6px 8px;
   font-family: inherit;
   font-size: 13px;
+  background: #fff;
 }
 
 .dr-field-inline {

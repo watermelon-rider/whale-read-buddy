@@ -11,7 +11,7 @@ import { SelectionAnnotator } from './SelectionAnnotator';
 interface Props {
   events: SessionEvent[];
   streaming: { reasoning: string; content: string } | null;
-  onAnnotateSelection: (quote: string, messageId: string) => void;
+  onAnnotateSelection: (quote: string, note: string, messageId: string) => void;
 }
 
 /** 把事件日志投影为 UI 消息（deriveDisplayMessages）。 */
