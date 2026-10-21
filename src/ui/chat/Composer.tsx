@@ -74,7 +74,7 @@ export function Composer(props: Props) {
     }
   };
 
-  // 自动高度。
+  // 自动高度：最多占内容窗口（面板）高度的一半。
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
@@ -84,7 +84,7 @@ export function Composer(props: Props) {
       return;
     }
     ta.style.height = 'auto';
-    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+    ta.style.height = `${Math.min(ta.scrollHeight, Math.floor(window.innerHeight * 0.5))}px`;
   }, [props.question]);
 
   const updateNote = (index: number, note: string) => {
@@ -95,6 +95,93 @@ export function Composer(props: Props) {
 
   return (
     <div className="dr-composer-card">
+      {props.annotations.length > 0 && (
+        <div className="dr-anno-anchor dr-anno-top" ref={annoAnchorRef}>
+          <button
+            className="dr-anno-chip dr-anno-chip-filled"
+            onClick={() => setShowAnnotations((v) => !v)}
+            title="查看 / 编辑批注"
+          >
+            <MessageSquareQuote size={14} strokeWidth={1.8} />
+            批注 ×{props.annotations.length}
+          </button>
+          {showAnnotations && (
+            <div className="dr-anno-list">
+              {props.annotations.map((a) => (
+                <div key={a.index} className="dr-anno-item">
+                  <div className="dr-anno-quote" title={a.quote}>
+                    <span className="dr-anno-quote-text">
+                      #{a.index}「{a.quote.length > 50 ? `${a.quote.slice(0, 50)}…` : a.quote}」
+                    </span>
+                    <button
+                      className="dr-anno-del"
+                      title="删除"
+                      onClick={() =>
+                        props.onAnnotationsChange(
+                          props.annotations
+                            .filter((x) => x.index !== a.index)
+                            .map((x, i) => ({ ...x, index: i + 1 })),
+                        )
+                      }
+                    >
+                      <X size={13} strokeWidth={1.8} />
+                    </button>
+                  </div>
+                  <div className="dr-anno-note-row">
+                    {editingIndex === a.index ? (
+                      <textarea
+                        autoFocus
+                        className="dr-anno-edit dr-anno-edit-area"
+                        value={editNote}
+                        placeholder="写点批注…"
+                        rows={1}
+                        ref={(el) => {
+                          if (el) {
+                            el.style.height = 'auto';
+                            el.style.height = `${Math.min(el.scrollHeight, 66)}px`;
+                          }
+                        }}
+                        onChange={(e) => {
+                          setEditNote(e.target.value);
+                          e.target.style.height = 'auto';
+                          e.target.style.height = `${Math.min(e.target.scrollHeight, 66)}px`;
+                        }}
+                        onBlur={() => {
+                          updateNote(a.index, editNote.trim());
+                          setEditingIndex(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (
+                            e.key === 'Enter' &&
+                            !e.shiftKey &&
+                            !e.nativeEvent.isComposing &&
+                            e.keyCode !== 229
+                          ) {
+                            e.preventDefault();
+                            updateNote(a.index, editNote.trim());
+                            setEditingIndex(null);
+                          }
+                          if (e.key === 'Escape') setEditingIndex(null);
+                        }}
+                      />
+                    ) : (
+                      <button
+                        className="dr-anno-note-btn"
+                        onClick={() => {
+                          setEditingIndex(a.index);
+                          setEditNote(a.note);
+                        }}
+                      >
+                        {a.note || '添加批注'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <textarea
         ref={textareaRef}
         className="dr-input"
@@ -105,95 +192,7 @@ export function Composer(props: Props) {
         onKeyDown={handleKeyDown}
       />
       <div className="dr-composer-footer">
-        <div className="dr-footer-left">
-          {props.annotations.length > 0 && (
-            <div className="dr-anno-anchor" ref={annoAnchorRef}>
-              <button
-                className="dr-anno-chip"
-                onClick={() => setShowAnnotations((v) => !v)}
-                title="查看 / 编辑批注"
-              >
-                <MessageSquareQuote size={14} strokeWidth={1.8} />
-                批注 ×{props.annotations.length}
-              </button>
-              {showAnnotations && (
-                <div className="dr-anno-list">
-                  {props.annotations.map((a) => (
-                    <div key={a.index} className="dr-anno-item">
-                      <div className="dr-anno-quote" title={a.quote}>
-                        <span className="dr-anno-quote-text">
-                          #{a.index}「{a.quote.length > 50 ? `${a.quote.slice(0, 50)}…` : a.quote}」
-                        </span>
-                        <button
-                          className="dr-anno-del"
-                          title="删除"
-                          onClick={() =>
-                            props.onAnnotationsChange(
-                              props.annotations
-                                .filter((x) => x.index !== a.index)
-                                .map((x, i) => ({ ...x, index: i + 1 })),
-                            )
-                          }
-                        >
-                          <X size={13} strokeWidth={1.8} />
-                        </button>
-                      </div>
-                      <div className="dr-anno-note-row">
-                        {editingIndex === a.index ? (
-                          <textarea
-                            autoFocus
-                            className="dr-anno-edit dr-anno-edit-area"
-                            value={editNote}
-                            placeholder="写点批注…"
-                            rows={1}
-                            ref={(el) => {
-                              if (el) {
-                                el.style.height = 'auto';
-                                el.style.height = `${Math.min(el.scrollHeight, 66)}px`;
-                              }
-                            }}
-                            onChange={(e) => {
-                              setEditNote(e.target.value);
-                              e.target.style.height = 'auto';
-                              e.target.style.height = `${Math.min(e.target.scrollHeight, 66)}px`;
-                            }}
-                            onBlur={() => {
-                              updateNote(a.index, editNote.trim());
-                              setEditingIndex(null);
-                            }}
-                            onKeyDown={(e) => {
-                              if (
-                                e.key === 'Enter' &&
-                                !e.shiftKey &&
-                                !e.nativeEvent.isComposing &&
-                                e.keyCode !== 229
-                              ) {
-                                e.preventDefault();
-                                updateNote(a.index, editNote.trim());
-                                setEditingIndex(null);
-                              }
-                              if (e.key === 'Escape') setEditingIndex(null);
-                            }}
-                          />
-                        ) : (
-                          <button
-                            className="dr-anno-note-btn"
-                            onClick={() => {
-                              setEditingIndex(a.index);
-                              setEditNote(a.note);
-                            }}
-                          >
-                            {a.note || '添加批注'}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <div className="dr-footer-left" />
         <div className="dr-footer-right">
           <div className="dr-model-anchor" ref={modelAnchorRef}>
             <button

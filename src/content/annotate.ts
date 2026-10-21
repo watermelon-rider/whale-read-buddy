@@ -106,6 +106,27 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
   let currentQuote = '';
   let currentAnchor: { prefix: string; suffix: string } | undefined;
   let editor: EditorState | null = null;
+  let watchTimer: ReturnType<typeof setInterval> | undefined;
+
+  const stopWatch = () => {
+    if (watchTimer !== undefined) {
+      clearInterval(watchTimer);
+      watchTimer = undefined;
+    }
+  };
+
+  /** 工具条可见期间轮询选区：点击侧栏等不走页面事件的失焦路径也能收起。 */
+  const startWatch = () => {
+    stopWatch();
+    watchTimer = setInterval(() => {
+      const selection = document.getSelection();
+      const text = selection?.toString().trim() ?? '';
+      if (!editor && (!selection || selection.isCollapsed || text.length === 0)) {
+        hide();
+        stopWatch();
+      }
+    }, 400);
+  };
 
   const hide = () => {
     host.style.display = 'none';
@@ -114,6 +135,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
   const closeEditor = () => {
     editor = null;
     hide();
+    stopWatch();
   };
 
   const clamp = (x: number, y: number, w: number, h: number) => ({
@@ -130,6 +152,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
     host.style.left = `${rect.left + window.scrollX}px`;
     host.style.top = `${rect.bottom + window.scrollY + 6}px`;
     host.style.display = 'block';
+    startWatch();
     // mousedown 先于 selectionchange 清空选区，preventDefault 保住选区。
     btn.addEventListener('mousedown', (e) => {
       e.preventDefault();
@@ -206,6 +229,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
     const text = selection?.toString().trim() ?? '';
     if (!selection || selection.isCollapsed || text.length === 0) {
       hide();
+      stopWatch();
       currentQuote = '';
       return;
     }
