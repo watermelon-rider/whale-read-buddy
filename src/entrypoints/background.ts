@@ -24,6 +24,20 @@ export default defineBackground(() => {
   // 点工具栏图标打开 side panel。
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
 
+  // 安装/更新后，给所有已打开的 http(s) 标签页补注 content script
+  //（Chrome 不会对扩展安装前已存在的标签页自动注入）。
+  chrome.runtime.onInstalled.addListener(() => {
+    void chrome.tabs.query({ url: ['http://*/*', 'https://*/*'] }).then((tabs) => {
+      for (const tab of tabs) {
+        if (tab.id !== undefined) {
+          chrome.scripting
+            .executeScript({ target: { tabId: tab.id }, files: ['content-scripts/content.js'] })
+            .catch(() => {});
+        }
+      }
+    });
+  });
+
   const panelPorts = new Set<chrome.runtime.Port>();
   const emit = (event: PanelEvent) => {
     for (const port of panelPorts) {

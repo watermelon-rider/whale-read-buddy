@@ -23,10 +23,8 @@ export async function extractPageForTab(tabId: number, url: string): Promise<Pag
 
 async function extractHtml(tabId: number, url: string): Promise<PageContent | null> {
   try {
-    const result = (await chrome.tabs.sendMessage(tabId, { kind: 'extractPage' })) as
-      | { title: string; markdown: string }
-      | { error: string };
-    if ('error' in result) return null;
+    const result = await requestExtraction(tabId);
+    if (!result || 'error' in result) return null;
     const { text, truncated } = truncateMarkdown(result.markdown);
     return {
       origin: originOf(url),
@@ -39,6 +37,30 @@ async function extractHtml(tabId: number, url: string): Promise<PageContent | nu
     };
   } catch {
     return null;
+  }
+}
+
+type ExtractionResult = { title: string; markdown: string } | { error: string };
+
+/**
+ * 向 tab 请求正文提取。安装扩展前就已打开的标签页没有 content script，
+ * 首次失败时用 chrome.scripting 动态注入后重试一次。
+ */
+async function requestExtraction(tabId: number): Promise<ExtractionResult | null> {
+  try {
+    return (await chrome.tabs.sendMessage(tabId, { kind: 'extractPage' })) as ExtractionResult;
+  } catch {
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ['content-scripts/content.js'],
+      });
+      return (await chrome.tabs.sendMessage(tabId, {
+        kind: 'extractPage',
+      })) as ExtractionResult;
+    } catch {
+      return null;
+    }
   }
 }
 
