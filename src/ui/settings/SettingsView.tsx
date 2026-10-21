@@ -50,26 +50,15 @@ export function SettingsView({ currentOrigin, onBack }: Props) {
       </header>
       <div className="dr-settings-body">
         <div className="dr-settings-section">
-          <div className="dr-settings-heading">账号与端点</div>
+          <div className="dr-settings-heading">账号</div>
           <div className="dr-settings-card">
-            <label className="dr-field">
+            <label className="dr-field dr-field-last">
               <span>DeepSeek API Key · 仅存本地，不会同步到云端</span>
               <input
                 type="password"
                 value={settings.apiKey}
                 onChange={(e) => patch({ apiKey: e.target.value.trim() })}
                 placeholder="sk-…"
-              />
-            </label>
-            <label className="dr-field">
-              <span>API 基址（兼容代理/网关）</span>
-              <input value={settings.baseURL} onChange={(e) => patch({ baseURL: e.target.value })} />
-            </label>
-            <label className="dr-field dr-field-last">
-              <span>Search / Fetch 工具端点</span>
-              <input
-                value={settings.toolsBaseURL}
-                onChange={(e) => patch({ toolsBaseURL: e.target.value })}
               />
             </label>
           </div>

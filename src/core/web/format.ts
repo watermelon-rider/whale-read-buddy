@@ -36,7 +36,10 @@ export function formatSearchResult(queries: string[], merged: WebSource[]): stri
   const lines = merged.map((s, i) => {
     const title = s.title && s.title.length > 0 ? s.title : s.url;
     const parts = [`${i + 1}. [${title}](${s.url})`];
-    if (s.snippet) parts.push(`   ${s.snippet}`);
+    // summary 是给模型读的长摘要，优先于 snippet。
+    const abstract = s.summary ?? s.snippet;
+    if (s.siteName) parts.push(`   来源站点：${s.siteName}`);
+    if (abstract) parts.push(`   ${abstract}`);
     if (s.publishedAt) parts.push(`   发布于 ${s.publishedAt}`);
     return parts.join('\n');
   });

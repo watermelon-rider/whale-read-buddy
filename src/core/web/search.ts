@@ -8,6 +8,9 @@ export interface WebSource {
   url: string;
   title?: string;
   snippet?: string;
+  /** 长摘要（600-800 字符，官方说明适用于给模型阅读）。 */
+  summary?: string;
+  siteName?: string;
   publishedAt?: string;
 }
 
@@ -44,6 +47,8 @@ export function mapSearchResponse(response: unknown): WebSource[] {
       typeof item.url !== 'string' ||
       typeof item.title !== 'string' ||
       typeof item.snippet !== 'string' ||
+      (item.summary !== undefined && item.summary !== null && typeof item.summary !== 'string') ||
+      (item.site_name !== undefined && item.site_name !== null && typeof item.site_name !== 'string') ||
       (item.date !== null && typeof item.date !== 'string')
     ) {
       throw new WebProviderError('WEB_PROVIDER_ERROR', 'Search API 响应条目格式非法。');
@@ -51,6 +56,8 @@ export function mapSearchResponse(response: unknown): WebSource[] {
     const source: WebSource = { url: item.url };
     if (item.title.length > 0) source.title = item.title;
     if (item.snippet.length > 0) source.snippet = item.snippet;
+    if (typeof item.summary === 'string' && item.summary.length > 0) source.summary = item.summary;
+    if (typeof item.site_name === 'string' && item.site_name.length > 0) source.siteName = item.site_name;
     if (item.date !== null && item.date.length > 0) source.publishedAt = item.date;
     return source;
   });
