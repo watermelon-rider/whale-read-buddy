@@ -3,7 +3,7 @@
  * - 用户消息：协议块隐藏，只显示提问 + 批注 chip（hover 查看）。
  * - 助手消息：Markdown 渲染；reasoning 折叠；Annotation N： 渲染为 hoverable chip。
  */
-import { Children, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Children, useMemo, useState, type ReactNode } from 'react';
 import { MessageSquareQuote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -138,16 +138,14 @@ export interface DisplayMessage {
   interrupted?: boolean;
 }
 
-/** 思维链滚动实况：只显示末尾几行，正文出现后即逝。 */
+/** 思维链实况：单行字幕，永远只显示最后一行（旧行上推隐去，无滚动条）。 */
 function ThinkingLive({ text }: { text: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [text]);
+  const lastLine = text.replace(/\s+$/, '').split('\n').pop() ?? '';
   return (
-    <div className="dr-thinking-live" ref={ref}>
-      {text}
+    <div className="dr-thinking-live" title="思维链实况">
+      <span key={lastLine} className="dr-thinking-line">
+        {lastLine}
+      </span>
     </div>
   );
 }

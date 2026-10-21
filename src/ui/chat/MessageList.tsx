@@ -164,12 +164,34 @@ export function MessageList({
     const el = listRef.current;
     if (!el) return;
     persistScroll(conversationId, el.scrollTop);
-    setPinned(el.scrollHeight - el.scrollTop - el.clientHeight < 48);
+    // 只有明确回到底部才恢复跟随；上滚由 wheel/touch 处理器立即取消。
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 8) setPinned(true);
+  };
+
+  // 用户主动上滚（滚轮/触摸/键盘）立即取消跟随，避免流式自动滚动与之打架。
+  const cancelFollow = () => setPinned(false);
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.deltaY < 0) cancelFollow();
+  };
+  const touchStartY = useRef(0);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0]?.clientY ?? 0;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const y = e.touches[0]?.clientY ?? 0;
+    if (y > touchStartY.current) cancelFollow(); // 手指下拉 = 内容上滚
   };
 
   return (
     <div className="dr-msg-wrap">
-      <div className="dr-msg-list" ref={listRef} onScroll={handleScroll}>
+      <div
+        className="dr-msg-list"
+        ref={listRef}
+        onScroll={handleScroll}
+        onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+      >
         <SelectionAnnotator onAnnotate={onAnnotateSelection}>
           {items.length === 0 && !streaming && (
             <div className="dr-empty">
