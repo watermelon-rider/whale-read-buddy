@@ -9,24 +9,42 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AnnotationItem } from '../../types';
 import { REPLY_ANNOTATION_RE, splitAnnotationProtocol } from '../../core/annotation/protocol';
+import { AnnoPopover } from '../shared/AnnoPopover';
 
-function AnnotationChips({ annotations }: { annotations: AnnotationItem[] }) {
+interface AnnoDetail {
+  anno: AnnotationItem;
+  rect: DOMRect;
+}
+
+function AnnotationChips({
+  annotations,
+  onShowDetail,
+}: {
+  annotations: AnnotationItem[];
+  onShowDetail: (d: AnnoDetail) => void;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <span className="dr-anno-chips">
-      <button className="dr-chip" onClick={() => setOpen((v) => !v)}>
+      <button className="dr-chip dr-chip-bordered" onClick={() => setOpen((v) => !v)}>
         <MessageSquareQuote size={13} strokeWidth={1.8} />
         批注 ×{annotations.length}
       </button>
       {open && (
         <div className="dr-anno-pop">
           {annotations.map((a) => (
-            <div key={a.index} className="dr-anno-pop-item">
+            <button
+              key={a.index}
+              className="dr-anno-pop-item dr-anno-pop-btn"
+              onClick={(e) =>
+                onShowDetail({ anno: a, rect: e.currentTarget.getBoundingClientRect() })
+              }
+            >
               <div className="dr-anno-quote">
                 #{a.index} 「{a.quote}」
               </div>
               {a.note && <div className="dr-anno-note">批注：{a.note}</div>}
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -43,9 +61,11 @@ function AnnotationChips({ annotations }: { annotations: AnnotationItem[] }) {
 export function AssistantContent({
   content,
   replyAnnotations,
+  onShowDetail = () => {},
 }: {
   content: string;
   replyAnnotations?: AnnotationItem[];
+  onShowDetail?: (d: AnnoDetail) => void;
 }) {
   const components = useMemo(() => {
     /** 文本片段内的 Annotation chip 替换。 */
@@ -59,13 +79,15 @@ export function AssistantContent({
         if (at > last) parts.push(text.slice(last, at));
         const anno = replyAnnotations.find((a) => a.index === Number(match[1]));
         parts.push(
-          <span
+          <button
             key={`${keyPrefix}-${key++}`}
             className="dr-chip dr-reply-anno"
-            title={anno ? `「${anno.quote}」\n批注：${anno.note || '（无）'}` : undefined}
+            onClick={(e) => {
+              if (anno) onShowDetail({ anno, rect: e.currentTarget.getBoundingClientRect() });
+            }}
           >
             Annotation {match[1]}：
-          </span>,
+          </button>,
         );
         last = at + match[0].length;
       }
@@ -114,7 +136,7 @@ export function AssistantContent({
       h2: wrap('h2'),
       h3: wrap('h3'),
     };
-  }, [replyAnnotations]);
+  }, [replyAnnotations, onShowDetail]);
 
   return (
     <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
@@ -155,6 +177,8 @@ export function MessageBubble({
 }: {
   message: DisplayMessage;
 }) {
+  const [detail, setDetail] = useState<AnnoDetail | null>(null);
+
   if (message.role === 'user') {
     const { question } = splitAnnotationProtocol(message.text);
     return (
@@ -166,9 +190,17 @@ export function MessageBubble({
             <span className="dr-plain dr-dim">（仅发送批注）</span>
           )}
           {message.annotations && message.annotations.length > 0 && (
-            <AnnotationChips annotations={message.annotations} />
+            <AnnotationChips annotations={message.annotations} onShowDetail={setDetail} />
           )}
         </div>
+        {detail && (
+          <AnnoPopover
+            rect={detail.rect}
+            quote={detail.anno.quote}
+            note={detail.anno.note}
+            onClose={() => setDetail(null)}
+          />
+        )}
       </div>
     );
   }
@@ -186,9 +218,21 @@ export function MessageBubble({
         </div>
       )}
       <div className="dr-md">
-        <AssistantContent content={message.text} replyAnnotations={message.replyAnnotations} />
+        <AssistantContent
+          content={message.text}
+          replyAnnotations={message.replyAnnotations}
+          onShowDetail={setDetail}
+        />
       </div>
       {message.interrupted && <div className="dr-interrupted">（已中断）</div>}
+      {detail && (
+        <AnnoPopover
+          rect={detail.rect}
+          quote={detail.anno.quote}
+          note={detail.anno.note}
+          onClose={() => setDetail(null)}
+        />
+      )}
     </div>
   );
 }

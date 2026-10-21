@@ -69,12 +69,13 @@ const SHADOW_CSS = `
   border-left: 3px solid #2563eb; padding-left: 8px; margin-bottom: 8px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-.dr-row { display: flex; align-items: center; gap: 8px; }
 .dr-input {
-  flex: 1; border: none; outline: none; font-size: 13px; padding: 6px 0;
+  width: 100%; border: none; outline: none; font-size: 13px; padding: 6px 0;
   font-family: inherit; color: #1f2329; background: transparent;
+  resize: none; line-height: 1.5; overflow-y: auto; max-height: 120px;
 }
 .dr-input::placeholder { color: #9ca3af; }
+.dr-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 4px; }
 .dr-ok {
   width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
   background: #4e75df; color: #fff;
@@ -84,6 +85,7 @@ const SHADOW_CSS = `
 .dr-del {
   border: none; background: transparent; color: #d93025; cursor: pointer;
   font-size: 12px; padding: 4px 6px; flex: none;
+  margin-right: auto;
 }
 `;
 
@@ -174,13 +176,22 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
     quoteEl.textContent = state.quote.length > 100 ? `${state.quote.slice(0, 100)}…` : state.quote;
     card.appendChild(quoteEl);
 
-    const row = document.createElement('div');
-    row.className = 'dr-row';
-    const input = document.createElement('input');
+    const input = document.createElement('textarea');
     input.className = 'dr-input';
     input.placeholder = '添加可选评论…';
+    input.rows = 1;
     input.value = state.mode === 'edit' ? handlers.getNote(state.quote) : '';
-    row.appendChild(input);
+    // 自适应内容高度（自动换行，上限 120px 出内部滚动条）。
+    const autogrow = () => {
+      input.style.height = 'auto';
+      input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+    };
+    input.addEventListener('input', autogrow);
+    card.appendChild(input);
+
+    // 操作行：删除（编辑模式）居左，确认 ✓ 独占一行居右。
+    const actions = document.createElement('div');
+    actions.className = 'dr-actions';
 
     if (state.mode === 'edit') {
       const del = document.createElement('button');
@@ -190,7 +201,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
         handlers.onRemove(state.quote);
         closeEditor();
       });
-      row.appendChild(del);
+      actions.appendChild(del);
     }
 
     const ok = document.createElement('button');
@@ -203,12 +214,12 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
       closeEditor();
     };
     ok.addEventListener('click', confirm);
-    row.appendChild(ok);
-    card.appendChild(row);
+    actions.appendChild(ok);
+    card.appendChild(actions);
 
-    // IME 组词中 Enter 不确认。
+    // IME 组词中 Enter 不确认；Shift+Enter 换行。
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
         e.preventDefault();
         confirm();
       }
@@ -216,11 +227,13 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
     });
 
     shadow.appendChild(card);
-    const pos = clamp(rect.left + window.scrollX, rect.bottom + window.scrollY + 6, 300, 120);
+    const pos = clamp(rect.left + window.scrollX, rect.bottom + window.scrollY + 6, 300, 220);
     host.style.left = `${pos.left}px`;
     host.style.top = `${pos.top}px`;
     host.style.display = 'block';
     input.focus();
+    autogrow();
+    input.setSelectionRange(input.value.length, input.value.length);
   };
 
   document.addEventListener('selectionchange', () => {

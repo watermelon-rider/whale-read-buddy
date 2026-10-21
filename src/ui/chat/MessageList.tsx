@@ -19,6 +19,8 @@ interface Props {
     reasoningMs?: number;
   } | null;
   onAnnotateSelection: (quote: string, note: string, messageId: string) => void;
+  /** 草稿批注（对话内批注在消息里画引用高亮与角标）。 */
+  draftAnnotations?: AnnotationItem[];
 }
 
 /** 每个会话记住滚动位置：切视图/重开面板都直接定位，不播回底动画。
@@ -118,9 +120,11 @@ export function MessageList({
   events,
   streaming,
   onAnnotateSelection,
+  draftAnnotations,
 }: Props) {
   const items = useMemo(() => toDisplayItems(events), [events]);
   const listRef = useRef<HTMLDivElement>(null);
+  const marksRef = useRef<HTMLDivElement>(null);
   // 用户上滚时钉住当前位置，不回到底部；点按钮恢复跟随。
   const [pinned, setPinned] = useState(true);
   const restoredRef = useRef(false);
@@ -182,6 +186,45 @@ export function MessageList({
     if (y > touchStartY.current) cancelFollow(); // 手指下拉 = 内容上滚
   };
 
+  // 对话内批注的引用高亮：在对应消息元素里精确匹配 quote 并画高亮 + 蓝色角标。
+  useEffect(() => {
+    const container = marksRef.current;
+    if (!container) return;
+    // 清理旧标记（React 重渲染后需重画）。
+    container.querySelectorAll('.dr-chat-anno-badge').forEach((n) => n.remove());
+    container.querySelectorAll('.dr-chat-anno-mark').forEach((span) => {
+      const parent = span.parentNode;
+      if (!parent) return;
+      while (span.firstChild) parent.insertBefore(span.firstChild, span);
+      parent.removeChild(span);
+      parent.normalize();
+    });
+    for (const a of draftAnnotations ?? []) {
+      if (a.source.kind !== 'chat') continue;
+      const msgEl = container.querySelector(`[data-message-id="${a.source.messageId}"]`);
+      if (!msgEl) continue;
+      const walker = document.createTreeWalker(msgEl, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      let done = false;
+      while ((node = walker.nextNode()) && !done) {
+        const textNode = node as Text;
+        const at = textNode.data.indexOf(a.quote);
+        if (at === -1) continue;
+        const target = textNode.splitText(at);
+        target.splitText(a.quote.length);
+        const mark = document.createElement('span');
+        mark.className = 'dr-chat-anno-mark';
+        target.parentNode?.replaceChild(mark, target);
+        mark.appendChild(target);
+        const badge = document.createElement('span');
+        badge.className = 'dr-chat-anno-badge';
+        badge.textContent = String(a.index);
+        mark.after(badge);
+        done = true;
+      }
+    }
+  }, [draftAnnotations, items]);
+
   return (
     <div className="dr-msg-wrap">
       <div
@@ -193,6 +236,7 @@ export function MessageList({
         onTouchMove={handleTouchMove}
       >
         <SelectionAnnotator onAnnotate={onAnnotateSelection}>
+          <div ref={marksRef}>
           {items.length === 0 && !streaming && (
             <div className="dr-empty">
               打开想读的页面，直接提问即可；
@@ -223,6 +267,7 @@ export function MessageList({
               }}
             />
           )}
+          </div>
         </SelectionAnnotator>
       </div>
       {!pinned && (

@@ -338,17 +338,93 @@
 
 .dr-reply-anno {
   margin: 0 2px;
+  border: 1px solid transparent;
 }
 
-/* Codex 风格输入卡片：贴边底部浮动条，淡阴影 */
-.dr-composer-card {
-  margin: 0;
-  background: #fff;
+.dr-reply-anno:hover {
+  border-color: var(--dr-accent);
+}
+
+/* 历史气泡里的批注 chip：蓝色边框 */
+.dr-chip-bordered {
+  border: 1px solid var(--dr-accent);
+}
+
+.dr-anno-pop-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
   border: none;
-  border-top: 1px solid #ececf0;
-  border-radius: 18px 18px 0 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.dr-anno-pop-btn:hover {
+  background: var(--dr-bg-subtle);
+  border-radius: 6px;
+}
+
+/* 批注详情浮窗 */
+.dr-anno-detail {
+  position: fixed;
+  z-index: 60;
+  background: #fff;
+  border: 1px solid var(--dr-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.14);
+  padding: 10px 12px;
+  font-size: 12px;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.dr-anno-detail-quote {
+  color: var(--dr-text-secondary);
+  border-left: 3px solid var(--dr-accent);
+  padding-left: 8px;
+  margin-bottom: 6px;
+  word-break: break-word;
+}
+
+.dr-anno-detail-note {
+  color: var(--dr-text);
+  word-break: break-word;
+}
+
+/* 对话内批注的引用高亮 + 角标 */
+.dr-chat-anno-mark {
+  background: rgba(78, 117, 223, 0.12);
+  border-bottom: 1.5px solid rgba(78, 117, 223, 0.55);
+  border-radius: 2px;
+}
+
+.dr-chat-anno-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #4e75df;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 600;
+  margin-left: 2px;
+  vertical-align: super;
+  cursor: default;
+}
+
+/* Codex 风格输入卡片：1px 灰边框 + 均匀四散淡阴影（留外边距防裁剪） */
+.dr-composer-card {
+  margin: 0 10px 10px;
+  background: #fff;
+  border: 1px solid #e3e3e6;
+  border-radius: 24px;
   padding: 10px 14px 10px;
-  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.07);
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.06),
+    0 0 4px rgba(0, 0, 0, 0.04);
 }
 
 .dr-input {

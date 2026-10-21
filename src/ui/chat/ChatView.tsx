@@ -204,6 +204,7 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
         events={events}
         streaming={streaming}
         onAnnotateSelection={addAnnotation}
+        draftAnnotations={annotations}
       />
       {turn.running && (
         <div className="dr-status">
