@@ -6,9 +6,11 @@ import { defineBackground } from 'wxt/utils/define-background';
 import { ConversationManager } from '../services/conversation-manager';
 import {
   deleteConversation,
+  getConversation,
   listAllConversations,
   listConversationsByOrigin,
   loadSession,
+  upsertConversation,
 } from '../services/storage/sessions';
 import { loadDraft, saveDraft } from '../services/storage/drafts';
 import {
@@ -60,7 +62,7 @@ export default defineBackground(() => {
 
   const PANEL_REQUEST_KINDS = new Set([
     'openConversation', 'newConversation', 'sendMessage', 'cancelTurn', 'listConversations',
-    'deleteConversation', 'loadHistory', 'saveDraft', 'loadDraft', 'restoreHighlights',
+    'deleteConversation', 'renameConversation', 'loadHistory', 'saveDraft', 'loadDraft', 'restoreHighlights',
     'getSettings', 'saveSettings', 'getSiteInstruction', 'saveSiteInstruction',
     'listSiteInstructions', 'answerAskUser',
   ]);
@@ -109,6 +111,13 @@ export default defineBackground(() => {
       case 'deleteConversation':
         await deleteConversation(req.conversationId);
         return { ok: true };
+      case 'renameConversation': {
+        const meta = await getConversation(req.conversationId);
+        if (meta) {
+          await upsertConversation({ ...meta, title: req.title.trim() || meta.title });
+        }
+        return { ok: true };
+      }
       case 'loadHistory': {
         const session = await loadSession(req.conversationId);
         const draft = await loadDraft(req.conversationId);

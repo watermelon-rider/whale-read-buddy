@@ -78,6 +78,11 @@ export function Composer(props: Props) {
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
+    // 空内容时按单行（placeholder 换行不应撑高输入框）。
+    if (props.question.length === 0) {
+      ta.style.height = '';
+      return;
+    }
     ta.style.height = 'auto';
     ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
   }, [props.question]);

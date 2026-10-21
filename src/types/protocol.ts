@@ -14,6 +14,7 @@ export type PanelRequest =
   | { kind: 'cancelTurn'; conversationId: string }
   | { kind: 'listConversations'; origin?: string }
   | { kind: 'deleteConversation'; conversationId: string }
+  | { kind: 'renameConversation'; conversationId: string; title: string }
   | { kind: 'loadHistory'; conversationId: string }
   | { kind: 'saveDraft'; conversationId: string; question: string; annotations: AnnotationItem[] }
   | { kind: 'loadDraft'; conversationId: string }

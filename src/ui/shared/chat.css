@@ -15,30 +15,9 @@
   border-bottom: 1px solid var(--dr-border);
 }
 
-.dr-brand {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.dr-brand-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
+.dr-header-spacer {
   flex: none;
-}
-
-.dr-brand-name {
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-@media (max-width: 420px) {
-  .dr-brand-name {
-    display: none;
-  }
+  width: 0;
 }
 
 .dr-header-actions {
@@ -644,15 +623,46 @@
 .dr-history-open {
   flex: 1;
   text-align: left;
-  border: 1px solid var(--dr-border);
+  border: 1px solid transparent;
   border-radius: 12px;
   background: #fff;
   padding: 8px 12px;
   cursor: pointer;
+  position: relative;
+  display: block;
 }
 
 .dr-history-open:hover {
-  border-color: var(--dr-accent);
+  border-color: #c9ced6;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.dr-history-actions {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  gap: 2px;
+  background: #fff;
+  padding-left: 6px;
+}
+
+.dr-history-open:hover .dr-history-actions {
+  display: inline-flex;
+}
+
+.dr-history-rename {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  font-family: inherit;
+  background: transparent;
+}
+
+.dr-history-editing {
+  cursor: default;
 }
 
 .dr-history-title {

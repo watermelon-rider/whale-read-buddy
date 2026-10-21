@@ -3,7 +3,7 @@
  * 状态来源 = 快照（loadHistory）+ 实时推送（Port 事件）。
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { History, Plus, Settings2, X } from 'lucide-react';
+import { History, Plus, Settings2 } from 'lucide-react';
 import type { SessionEvent } from '../../core/session/events';
 import type { AskUserQuestion } from '../../core/agent/tools';
 import type { StreamDelta } from '../../core/llm/stream';
@@ -159,10 +159,8 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
   return (
     <div className="dr-chat">
       <header className="dr-chat-header">
-        <div className="dr-brand">
-          <img className="dr-brand-icon" src={chrome.runtime.getURL('icons/icon-128.png')} alt="" />
-          <span className="dr-brand-name">WhaleRead Buddy</span>
-        </div>
+        {/* Chrome 原生侧边栏已带品牌与关闭按钮，这里不重复。 */}
+        <span className="dr-header-spacer" />
         <div className="dr-chat-title" title={conversation.title}>
           {conversation.title}
         </div>
@@ -175,9 +173,6 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
           </button>
           <button className="dr-icon-btn" onClick={onOpenSettings} title="设置">
             <Settings2 size={16} strokeWidth={1.8} />
-          </button>
-          <button className="dr-icon-btn" title="关闭" onClick={() => window.close()}>
-            <X size={16} strokeWidth={1.8} />
           </button>
         </div>
       </header>
