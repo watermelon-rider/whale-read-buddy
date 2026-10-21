@@ -22,9 +22,8 @@ export type PanelRequest =
   | { kind: 'restoreHighlights'; conversationId: string }
   | { kind: 'getSettings' }
   | { kind: 'saveSettings'; settings: Settings }
-  | { kind: 'getSiteInstruction'; origin: string }
-  | { kind: 'saveSiteInstruction'; origin: string; text: string }
-  | { kind: 'listSiteInstructions' }
+  | { kind: 'getConversationInstruction'; conversationId: string }
+  | { kind: 'saveConversationInstruction'; conversationId: string; text: string }
   | { kind: 'answerAskUser'; requestId: string; answers: Record<string, string> };
 
 /** background → side panel 推送。 */

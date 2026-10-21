@@ -24,8 +24,8 @@ export interface Draft {
   updatedAt: number;
 }
 
-export interface SiteInstruction {
-  origin: string;
+export interface ConversationInstruction {
+  conversationId: string;
   text: string;
 }
 
@@ -33,7 +33,7 @@ export const db = new Dexie('deepreader') as Dexie & {
   conversations: EntityTable<ConversationMeta, 'id'>;
   events: EntityTable<StoredEvent, 'id'>;
   drafts: EntityTable<Draft, 'conversationId'>;
-  siteInstructions: EntityTable<SiteInstruction, 'origin'>;
+  conversationInstructions: EntityTable<ConversationInstruction, 'conversationId'>;
 };
 
 db.version(1).stores({
@@ -41,4 +41,10 @@ db.version(1).stores({
   events: '++id, [conversationId+seq], conversationId',
   drafts: 'conversationId',
   siteInstructions: 'origin',
+});
+
+// v2：站点指令（per-origin）废弃，改为会话提示词（per-conversation）。
+db.version(2).stores({
+  siteInstructions: null,
+  conversationInstructions: 'conversationId',
 });

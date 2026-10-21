@@ -203,7 +203,7 @@ describe('提示词组装', () => {
     const q = assembleSystemPrompt({
       persona: '严厉导师',
       globalInstructions: '先给结论',
-      siteInstructions: '本站先看评论区',
+      conversationInstructions: '本站先看评论区',
       toolsEnabled: false,
     });
     expect(q).toContain('严厉导师');

@@ -14,11 +14,10 @@ import {
 } from '../services/storage/sessions';
 import { loadDraft, saveDraft } from '../services/storage/drafts';
 import {
-  listSiteInstructions,
+  loadConversationInstruction,
   loadSettings,
-  loadSiteInstruction,
+  saveConversationInstruction,
   saveSettings,
-  saveSiteInstruction,
 } from '../services/storage/settings';
 import type { PanelEvent, PanelRequest, PanelSnapshot } from '../types/protocol';
 import type { AnnotationItem } from '../types';
@@ -63,8 +62,8 @@ export default defineBackground(() => {
   const PANEL_REQUEST_KINDS = new Set([
     'openConversation', 'getLastConversation', 'newConversation', 'sendMessage', 'cancelTurn', 'listConversations',
     'deleteConversation', 'renameConversation', 'loadHistory', 'saveDraft', 'loadDraft', 'restoreHighlights',
-    'getSettings', 'saveSettings', 'getSiteInstruction', 'saveSiteInstruction',
-    'listSiteInstructions', 'answerAskUser',
+    'getSettings', 'saveSettings', 'getConversationInstruction', 'saveConversationInstruction',
+    'answerAskUser',
   ]);
 
   chrome.runtime.onMessage.addListener((raw: PanelRequest, sender, sendResponse) => {
@@ -80,21 +79,22 @@ export default defineBackground(() => {
   async function handleRequest(req: PanelRequest, sender: chrome.runtime.MessageSender) {
     switch (req.kind) {
       case 'openConversation': {
-        await manager.refreshSystemPrompt(new URL(req.url).origin);
-        return manager.openConversation(req.tabId, req.url);
+        const opened = await manager.openConversation(req.tabId, req.url);
+        await manager.refreshSystemPrompt(opened.id);
+        return opened;
       }
       case 'getLastConversation':
         return (await manager.getLastActiveConversation()) ?? null;
       case 'newConversation': {
         const meta = await manager.createConversation(req.url);
-        await manager.refreshSystemPrompt(meta.origin);
+        await manager.refreshSystemPrompt(meta.id);
         return meta;
       }
       case 'sendMessage': {
         // 需要 tabId 来提取页面：side panel 不知道 tab，发送时由面板附带当前 tabId。
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.id || !tab.url) throw new Error('无法定位当前标签页');
-        await manager.refreshSystemPrompt(new URL(tab.url).origin);
+        await manager.refreshSystemPrompt(req.conversationId);
         await manager.sendMessage(
           req.conversationId,
           tab.id,
@@ -149,13 +149,11 @@ export default defineBackground(() => {
       case 'saveSettings':
         await saveSettings(req.settings);
         return { ok: true };
-      case 'getSiteInstruction':
-        return (await loadSiteInstruction(req.origin)) ?? '';
-      case 'saveSiteInstruction':
-        await saveSiteInstruction(req.origin, req.text);
+      case 'getConversationInstruction':
+        return (await loadConversationInstruction(req.conversationId)) ?? '';
+      case 'saveConversationInstruction':
+        await saveConversationInstruction(req.conversationId, req.text);
         return { ok: true };
-      case 'listSiteInstructions':
-        return listSiteInstructions();
       case 'answerAskUser':
         manager.answerAskUser(req.requestId, req.answers);
         return { ok: true };

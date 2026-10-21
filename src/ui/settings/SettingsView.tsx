@@ -8,23 +8,23 @@ import type { Settings } from '../../types';
 import { request } from '../shared/backend';
 
 interface Props {
-  currentOrigin: string;
+  conversationId: string;
   onBack: () => void;
 }
 
-export function SettingsView({ currentOrigin, onBack }: Props) {
+export function SettingsView({ conversationId, onBack }: Props) {
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [siteInstruction, setSiteInstruction] = useState('');
+  const [conversationPrompt, setConversationPrompt] = useState('');
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     void (async () => {
       setSettings(await request<Settings>({ kind: 'getSettings' }));
-      setSiteInstruction(
-        await request<string>({ kind: 'getSiteInstruction', origin: currentOrigin }),
+      setConversationPrompt(
+        await request<string>({ kind: 'getConversationInstruction', conversationId }),
       );
     })();
-  }, [currentOrigin]);
+  }, [conversationId]);
 
   if (!settings) return null;
 
@@ -35,7 +35,11 @@ export function SettingsView({ currentOrigin, onBack }: Props) {
 
   const save = async () => {
     await request({ kind: 'saveSettings', settings });
-    await request({ kind: 'saveSiteInstruction', origin: currentOrigin, text: siteInstruction });
+    await request({
+      kind: 'saveConversationInstruction',
+      conversationId,
+      text: conversationPrompt,
+    });
     setSaved(true);
   };
 
@@ -67,7 +71,7 @@ export function SettingsView({ currentOrigin, onBack }: Props) {
           <div className="dr-settings-heading">人设与指令</div>
           <div className="dr-settings-card">
             <label className="dr-field">
-              <span>陪读人设（留空用默认）</span>
+              <span>人设（留空用默认）</span>
               <textarea
                 rows={4}
                 value={settings.persona}
@@ -76,7 +80,7 @@ export function SettingsView({ currentOrigin, onBack }: Props) {
               />
             </label>
             <label className="dr-field">
-              <span>全局阅读指令（对所有站点生效）</span>
+              <span>系统提示词</span>
               <textarea
                 rows={3}
                 value={settings.globalInstructions}
@@ -85,13 +89,13 @@ export function SettingsView({ currentOrigin, onBack }: Props) {
               />
             </label>
             <label className="dr-field dr-field-last">
-              <span>站点指令（仅 {currentOrigin}）</span>
+              <span>会话提示词（仅对当前会话生效）</span>
               <textarea
                 rows={3}
-                value={siteInstruction}
-                placeholder="例：知乎的回答先关注赞同数与评论区争议。"
+                value={conversationPrompt}
+                placeholder="例：这次阅读重点关注代码实现细节。"
                 onChange={(e) => {
-                  setSiteInstruction(e.target.value);
+                  setConversationPrompt(e.target.value);
                   setSaved(false);
                 }}
               />

@@ -23,7 +23,8 @@ const TOOL_GUIDANCE = `【工具使用规约】
 export interface SystemPromptInput {
   persona: string;
   globalInstructions: string;
-  siteInstructions?: string;
+  /** 会话提示词：仅对当前会话生效。 */
+  conversationInstructions?: string;
   /** 是否启用工具（决定工具指引段是否出现）。 */
   toolsEnabled: boolean;
 }
@@ -33,7 +34,7 @@ export function assembleSystemPrompt(input: SystemPromptInput): string {
   const persona = input.persona.trim().length > 0 ? input.persona.trim() : DEFAULT_PERSONA;
   sections.push(persona);
 
-  const instructions = assembleInstructions(input.globalInstructions, input.siteInstructions);
+  const instructions = assembleInstructions(input.globalInstructions, input.conversationInstructions);
   if (instructions) sections.push(instructions);
 
   if (input.toolsEnabled) sections.push(TOOL_GUIDANCE);

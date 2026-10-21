@@ -63,7 +63,9 @@ export function App() {
         />
       );
     case 'settings':
-      return <SettingsView currentOrigin={currentOrigin} onBack={() => setView({ name: 'chat' })} />;
+      return (
+        <SettingsView conversationId={conversation.id} onBack={() => setView({ name: 'chat' })} />
+      );
     default:
       return (
         <ChatView

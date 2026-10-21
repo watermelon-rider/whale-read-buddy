@@ -26,7 +26,7 @@ import {
   upsertConversation,
 } from './storage/sessions';
 import { clearDraft, loadDraft, saveDraft } from './storage/drafts';
-import { loadSettings, loadSiteInstruction } from './storage/settings';
+import { loadConversationInstruction, loadSettings } from './storage/settings';
 import { extractPageForTab } from './extract-service';
 import type { PanelEvent } from '../types/protocol';
 
@@ -223,7 +223,6 @@ export class ConversationManager {
   }
 
   private buildLoop(live: LiveConversation, settings: Settings): AgentLoop {
-    const origin = live.meta.origin;
     const conversationId = live.meta.id;
     const executor = this.buildExecutor(settings, conversationId);
     return new AgentLoop({
@@ -240,24 +239,24 @@ export class ConversationManager {
           ...(info.toolNames ? { toolNames: info.toolNames } : {}),
         }),
       buildSystemPrompt: () =>
-        // 站点指令读取是异步的，这里读同步缓存：sendMessage 前已由 refreshSystemPrompt 填充。
-        this.systemPromptCache.get(origin) ??
+        // 会话提示词读取是异步的，这里读同步缓存：sendMessage 前已由 refreshSystemPrompt 填充。
+        this.systemPromptCache.get(conversationId) ??
         assembleSystemPrompt({ persona: '', globalInstructions: '', toolsEnabled: true }),
     });
   }
 
   private systemPromptCache = new Map<string, string>();
 
-  /** 在 sendMessage 前刷新系统提示词缓存（persona / 指令按当前设置组装）。 */
-  async refreshSystemPrompt(origin: string): Promise<void> {
+  /** 在 sendMessage 前刷新系统提示词缓存（persona / 系统提示词 / 会话提示词按当前设置组装）。 */
+  async refreshSystemPrompt(conversationId: string): Promise<void> {
     const settings = await loadSettings();
-    const siteInstructions = await loadSiteInstruction(origin);
+    const conversationInstructions = await loadConversationInstruction(conversationId);
     this.systemPromptCache.set(
-      origin,
+      conversationId,
       assembleSystemPrompt({
         persona: settings.persona,
         globalInstructions: settings.globalInstructions,
-        ...(siteInstructions ? { siteInstructions } : {}),
+        ...(conversationInstructions ? { conversationInstructions } : {}),
         toolsEnabled: true,
       }),
     );
