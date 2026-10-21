@@ -191,14 +191,16 @@ export class ConversationManager {
     const live = await this.ensureLive(conversationId);
     live.thinkingEnabled = thinkingEnabled;
 
-    await this.injectPageIfNeeded(live, tabId, pageUrl);
-
     const text = composeUserText(question, annotations);
     const settings = await loadSettings();
+    // 用户消息先入日志，页面注入随后——UI 时间线按真实动作顺序呈现。
     live.session.append('user/message', {
       text,
       ...(annotations.length > 0 ? { annotations } : {}),
     });
+
+    await this.injectPageIfNeeded(live, tabId, pageUrl);
+
     await this.touchMeta(live);
     await clearDraft(conversationId);
 

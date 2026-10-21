@@ -9,6 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AnnotationItem } from '../../types';
 import { REPLY_ANNOTATION_RE, splitAnnotationProtocol } from '../../core/annotation/protocol';
+import { redactReasoning } from '../../core/prompt/redact';
 
 function AnnotationChips({ annotations }: { annotations: AnnotationItem[] }) {
   const [open, setOpen] = useState(false);
@@ -134,8 +135,19 @@ export interface DisplayMessage {
   interrupted?: boolean;
 }
 
-export function MessageBubble({ message }: { message: DisplayMessage }) {
+export function MessageBubble({
+  message,
+  redactSources = [],
+}: {
+  message: DisplayMessage;
+  /** 思维链脱敏源：人设/提示词原文。 */
+  redactSources?: string[];
+}) {
   const [showReasoning, setShowReasoning] = useState(false);
+  const reasoningText = useMemo(
+    () => (message.reasoning ? redactReasoning(message.reasoning, redactSources) : undefined),
+    [message.reasoning, redactSources],
+  );
 
   if (message.role === 'user') {
     const { question } = splitAnnotationProtocol(message.text);
@@ -157,7 +169,7 @@ export function MessageBubble({ message }: { message: DisplayMessage }) {
 
   return (
     <div className="dr-msg dr-msg-assistant">
-      {message.reasoning && (
+      {reasoningText && (
         <div className="dr-reasoning">
           <button className="dr-reasoning-toggle" onClick={() => setShowReasoning((v) => !v)}>
             {showReasoning ? (
@@ -167,7 +179,7 @@ export function MessageBubble({ message }: { message: DisplayMessage }) {
             )}
             思维链
           </button>
-          {showReasoning && <div className="dr-reasoning-body">{message.reasoning}</div>}
+          {showReasoning && <div className="dr-reasoning-body">{reasoningText}</div>}
         </div>
       )}
       <div className="dr-md">

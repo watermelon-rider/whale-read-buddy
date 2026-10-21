@@ -39,6 +39,7 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
     reasoningEffort: 'high',
   });
   const [askUser, setAskUser] = useState<{ requestId: string; questions: AskUserQuestion[] } | null>(null);
+  const [redactSources, setRedactSources] = useState<string[]>([]);
   const conversationIdRef = useRef(conversation.id);
   conversationIdRef.current = conversation.id;
 
@@ -54,6 +55,13 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
       const settings = await request<Settings>({ kind: 'getSettings' });
       if (!cancelled) {
         setModelChoice({ model: settings.model, reasoningEffort: settings.reasoningEffort });
+      }
+      const convPrompt = await request<string>({
+        kind: 'getConversationInstruction',
+        conversationId: conversation.id,
+      });
+      if (!cancelled) {
+        setRedactSources([settings.persona, settings.globalInstructions, convPrompt]);
       }
       // 未发送页面批注的高亮恢复。
       if (snapshot.draft.annotations.some((a) => a.source.kind === 'page')) {
@@ -180,6 +188,7 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
         events={events}
         streaming={streaming}
         onAnnotateSelection={addAnnotation}
+        redactSources={redactSources}
       />
       {turn.running && (
         <div className="dr-status">
