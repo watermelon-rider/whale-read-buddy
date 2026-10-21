@@ -32,4 +32,17 @@ describe('extractPseudoThought', () => {
     const raw = `${'长'.repeat(310)}\n脑回路：太晚出现的不算`;
     expect(extractPseudoThought(raw).thought).toBeUndefined();
   });
+
+  it('容忍书名号/加粗修饰的变体', () => {
+    expect(extractPseudoThought('「脑回路：先吃饭」\n\n正文').thought).toBe('先吃饭');
+    expect(extractPseudoThought('**脑回路：** 翻书中\n\n正文').thought).toBe('翻书中');
+  });
+
+  it('脑回路前有正文时也能提取（不吞前文换行）', () => {
+    const raw = '开头一句。\n脑回路：边想边干饭\n\n正文部分';
+    const { thought, content } = extractPseudoThought(raw);
+    expect(thought).toBe('边想边干饭');
+    expect(content).toContain('开头一句。');
+    expect(content).toContain('正文部分');
+  });
 });
