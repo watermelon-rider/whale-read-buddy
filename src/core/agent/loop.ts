@@ -35,6 +35,7 @@ const MAX_STEPS_PER_TURN = 8;
 export class AgentLoop {
   private abortController?: AbortController;
   private lastTimeContextAt = 0;
+  private prefixFallbackLogged = false;
 
   constructor(private readonly deps: LoopDeps) {}
 
@@ -51,6 +52,7 @@ export class AgentLoop {
     try {
       // token 压力检查：必要时先压缩（溢出错误兜底在 catch 里做）。
       await maybeCompact(session, settings, signal);
+      this.prefixFallbackLogged = false;
 
       for (let step = 0; step < MAX_STEPS_PER_TURN; step++) {
         this.deps.onStep?.({ step });
@@ -129,6 +131,13 @@ export class AgentLoop {
     } catch (err) {
       // Beta 前缀与 tools/思考模式的组合若被拒绝（400），退化为普通请求。
       if (err instanceof DeepSeekApiError && err.status === 400) {
+        // 记一条 attempt 留证（排查用），对用户不可见。
+        if (!this.prefixFallbackLogged) {
+          this.prefixFallbackLogged = true;
+          session.append('assistant/attempt', {
+            error: '前缀续写被拒（HTTP 400），本次降级为普通请求',
+          });
+        }
         return streamChat(settings, base, this.deps.onDelta);
       }
       throw err;
