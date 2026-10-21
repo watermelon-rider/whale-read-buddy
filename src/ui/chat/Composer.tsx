@@ -98,7 +98,7 @@ export function Composer(props: Props) {
       <textarea
         ref={textareaRef}
         className="dr-input"
-        placeholder="就当前页面提问…（选中页面或对话文字可添加批注）"
+        placeholder="给大肥鱼发消息…"
         value={props.question}
         rows={1}
         onChange={(e) => props.onQuestionChange(e.target.value)}

@@ -160,7 +160,7 @@ export function MessageList({ conversationId, events, streaming, onAnnotateSelec
         <SelectionAnnotator onAnnotate={onAnnotateSelection}>
           {items.length === 0 && !streaming && (
             <div className="dr-empty">
-              我是你的陪读伙伴。打开想读的页面，直接提问即可；
+              打开想读的页面，直接提问即可；
               也可以在页面或对话里划词批注，随问题一起发给我。
             </div>
           )}

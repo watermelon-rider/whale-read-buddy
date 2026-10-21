@@ -23,7 +23,13 @@ body,
   height: 100%;
   background: var(--dr-bg);
   color: var(--dr-text);
-  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  font-family:
+    'Noto Sans SC',
+    -apple-system,
+    'PingFang SC',
+    'Microsoft YaHei',
+    'Noto Sans CJK SC',
+    sans-serif;
   font-size: 14px;
   line-height: 1.6;
 }
