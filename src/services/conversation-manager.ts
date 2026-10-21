@@ -90,14 +90,24 @@ export class ConversationManager {
   }
 
   /** 页面划词批注进入当前会话草稿（canonical index 在此分配）。 */
-  async addPageAnnotation(quote: string, note: string): Promise<AnnotationItem[]> {
+  async addPageAnnotation(
+    quote: string,
+    note: string,
+    anchor?: { prefix: string; suffix: string },
+  ): Promise<AnnotationItem[]> {
     const conversationId = await this.resolveCurrentConversationId();
     if (!conversationId) return [];
     const draft = await loadDraft(conversationId);
     const annotations = draft?.annotations ?? [];
     const next: AnnotationItem[] = [
       ...annotations,
-      { index: annotations.length + 1, quote, note, source: { kind: 'page' } },
+      {
+        index: annotations.length + 1,
+        quote,
+        note,
+        source: { kind: 'page' },
+        ...(anchor ? { anchor } : {}),
+      },
     ];
     await saveDraft(conversationId, draft?.question ?? '', next);
     this.emit({ kind: 'draftUpdated', conversationId, annotations: next });

@@ -7,7 +7,7 @@
 import { initHighlightListeners, rectOfQuote } from './highlight';
 
 export interface PageAnnotationHandlers {
-  onAdd: (quote: string, note: string) => void;
+  onAdd: (quote: string, note: string, anchor?: { prefix: string; suffix: string }) => void;
   onUpdate: (quote: string, note: string) => void;
   onRemove: (quote: string) => void;
   /** 查询某 quote 的当前批注内容（编辑模式回填）。 */
@@ -15,6 +15,38 @@ export interface PageAnnotationHandlers {
 }
 
 const HOST_CSS = 'position:absolute;z-index:2147483647;';
+
+/** 从选区端点向前/向后收集上下文文本（用于多处出现时消歧）。 */
+function captureAnchor(range: Range): { prefix: string; suffix: string } {
+  const CONTEXT_LEN = 48;
+  const collect = (backwards: boolean, from: Node, offset: number): string => {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    let n: Node | null;
+    while ((n = walker.nextNode())) nodes.push(n as Text);
+    const idx = nodes.indexOf(from as Text);
+    if (idx === -1) return '';
+    let text = '';
+    if (backwards) {
+      for (let i = idx; i >= 0 && text.length < CONTEXT_LEN; i--) {
+        const data = nodes[i]!.data;
+        const piece = i === idx ? data.slice(0, offset) : data;
+        text = piece + text;
+      }
+    } else {
+      for (let i = idx; i < nodes.length && text.length < CONTEXT_LEN; i++) {
+        const data = nodes[i]!.data;
+        const piece = i === idx ? data.slice(offset) : data;
+        text += piece;
+      }
+    }
+    return text;
+  };
+  return {
+    prefix: collect(true, range.startContainer, range.startOffset),
+    suffix: collect(false, range.endContainer, range.endOffset),
+  };
+}
 
 const SHADOW_CSS = `
 :host { all: initial; }
@@ -66,6 +98,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
   document.documentElement.appendChild(host);
 
   let currentQuote = '';
+  let currentAnchor: { prefix: string; suffix: string } | undefined;
   let editor: EditorState | null = null;
 
   const hide = () => {
@@ -136,7 +169,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
     ok.textContent = '✓';
     const confirm = () => {
       const note = input.value.trim();
-      if (state.mode === 'add') handlers.onAdd(state.quote, note);
+      if (state.mode === 'add') handlers.onAdd(state.quote, note, currentAnchor);
       else handlers.onUpdate(state.quote, note);
       closeEditor();
     };
@@ -173,6 +206,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
     const anchorNode = selection.anchorNode;
     if (anchorNode && host.contains(anchorNode)) return;
     currentQuote = text.slice(0, 2000);
+    currentAnchor = captureAnchor(selection.getRangeAt(0));
     showButton(selection.getRangeAt(0).getBoundingClientRect());
   });
 

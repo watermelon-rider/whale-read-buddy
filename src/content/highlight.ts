@@ -70,39 +70,97 @@ function positionMarkers(): void {
   }
 }
 
-/** 单文本节点内的精确匹配高亮；跨节点 quote 只取首个完整命中，找不到就跳过。 */
-function highlightOne(quote: string, index: number): boolean {
+interface TextNodeEntry {
+  node: Text;
+  /** 在拼接全文中的起始偏移。 */
+  start: number;
+}
+
+/** 收集 body 下所有文本节点并拼接全文（跳过我们自己的 UI）。 */
+function collectPageText(): { full: string; nodes: TextNodeEntry[] } {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes: TextNodeEntry[] = [];
+  let full = '';
   let node: Node | null;
   while ((node = walker.nextNode())) {
     const textNode = node as Text;
-    const at = textNode.data.indexOf(quote);
-    if (at === -1) continue;
-    const target = textNode.splitText(at);
-    target.splitText(quote.length);
-    const span = document.createElement('span');
-    span.className = HIGHLIGHT_CLASS;
-    span.title = `批注 #${index}（未发送）`;
-    target.parentNode?.replaceChild(span, target);
-    span.appendChild(target);
-
-    const range = document.createRange();
-    range.selectNodeContents(span);
-
-    const marker = document.createElement('div');
-    marker.className = MARKER_CLASS;
-    marker.textContent = String(index);
-    marker.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dispatchEdit(quote);
-    });
-    span.addEventListener('click', () => dispatchEdit(quote));
-    document.body.appendChild(marker);
-
-    rendered.push({ quote, spans: [span], marker, range });
-    return true;
+    if (textNode.data.trim().length === 0) continue;
+    nodes.push({ node: textNode, start: full.length });
+    full += textNode.data;
   }
-  return false;
+  return { full, nodes };
+}
+
+/** 在全文里找 quote 的所有出现位置，用前后文锚点选出最匹配的一处。 */
+function locateQuote(
+  full: string,
+  quote: string,
+  anchor?: { prefix: string; suffix: string },
+): number {
+  const occurrences: number[] = [];
+  let from = 0;
+  for (;;) {
+    const at = full.indexOf(quote, from);
+    if (at === -1) break;
+    occurrences.push(at);
+    from = at + 1;
+  }
+  if (occurrences.length === 0) return -1;
+  if (occurrences.length === 1 || !anchor) return occurrences[0] ?? -1;
+
+  // 多处出现：按前后文匹配度打分（精确匹配前缀/后缀各记 1 分）。
+  let best = -1;
+  let bestScore = -1;
+  for (const at of occurrences) {
+    let score = 0;
+    const before = full.slice(Math.max(0, at - anchor.prefix.length), at);
+    const after = full.slice(at + quote.length, at + quote.length + anchor.suffix.length);
+    if (anchor.prefix && before === anchor.prefix) score++;
+    if (anchor.suffix && after === anchor.suffix) score++;
+    if (score > bestScore) {
+      bestScore = score;
+      best = at;
+    }
+  }
+  return best;
+}
+
+/** 把全文偏移映射回文本节点；跨节点的 quote 暂不包裹（MVP 限制）。 */
+function wrapAt(nodes: TextNodeEntry[], fullStart: number, length: number, index: number, quote: string): boolean {
+  const entry = nodes.find((n) => fullStart >= n.start && fullStart + length <= n.start + n.node.data.length);
+  if (!entry) return false;
+  const at = fullStart - entry.start;
+  const target = entry.node.splitText(at);
+  target.splitText(length);
+  const span = document.createElement('span');
+  span.className = HIGHLIGHT_CLASS;
+  span.title = `批注 #${index}（未发送）`;
+  target.parentNode?.replaceChild(span, target);
+  span.appendChild(target);
+
+  const range = document.createRange();
+  range.selectNodeContents(span);
+
+  const marker = document.createElement('div');
+  marker.className = MARKER_CLASS;
+  marker.textContent = String(index);
+  marker.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dispatchEdit(quote);
+  });
+  span.addEventListener('click', () => dispatchEdit(quote));
+  document.body.appendChild(marker);
+
+  rendered.push({ quote, spans: [span], marker, range });
+  return true;
+}
+
+/** 精确 + 前后文锚定的高亮；找不到就跳过（页面已变）。 */
+function highlightOne(annotation: AnnotationItem): boolean {
+  const { full, nodes } = collectPageText();
+  const at = locateQuote(full, annotation.quote, annotation.anchor);
+  if (at === -1) return false;
+  return wrapAt(nodes, at, annotation.quote.length, annotation.index, annotation.quote);
 }
 
 /** 全量重绘草稿高亮（canonical 列表由 background 同步）。 */
@@ -110,7 +168,7 @@ export function renderHighlights(annotations: AnnotationItem[]): void {
   ensureStyle();
   clearHighlights();
   for (const a of annotations) {
-    if (a.source.kind === 'page') highlightOne(a.quote, a.index);
+    if (a.source.kind === 'page') highlightOne(a);
   }
   positionMarkers();
 }

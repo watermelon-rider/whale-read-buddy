@@ -167,11 +167,16 @@ export default defineBackground(() => {
   // content script 上报的页面划词批注：写入当前会话草稿（background 是草稿的唯一写入口），
   // 广播给 side panel，并把最新列表回同步给页面重画高亮。
   chrome.runtime.onMessage.addListener((raw) => {
-    const report = raw as { kind: string; quote?: string; note?: string };
+    const report = raw as {
+      kind: string;
+      quote?: string;
+      note?: string;
+      anchor?: { prefix: string; suffix: string };
+    };
     if (typeof report.quote !== 'string') return;
     if (report.kind === 'pageSelected') {
       void manager
-        .addPageAnnotation(report.quote, report.note ?? '')
+        .addPageAnnotation(report.quote, report.note ?? '', report.anchor)
         .then(() => resyncCurrentDraft());
     } else if (report.kind === 'pageAnnotationUpdated') {
       void manager.updatePageAnnotation(report.quote, report.note ?? '');

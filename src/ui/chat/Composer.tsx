@@ -44,6 +44,24 @@ export function Composer(props: Props) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editNote, setEditNote] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const annoAnchorRef = useRef<HTMLDivElement>(null);
+  const modelAnchorRef = useRef<HTMLDivElement>(null);
+
+  // 失焦（点击弹层外部）关闭两个菜单。
+  useEffect(() => {
+    const onDown = (e: globalThis.MouseEvent) => {
+      const target = e.target as Node;
+      if (showAnnotations && annoAnchorRef.current && !annoAnchorRef.current.contains(target)) {
+        setShowAnnotations(false);
+        setEditingIndex(null);
+      }
+      if (showModelMenu && modelAnchorRef.current && !modelAnchorRef.current.contains(target)) {
+        setShowModelMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [showAnnotations, showModelMenu]);
 
   const canSend =
     !props.running && (props.question.trim().length > 0 || props.annotations.length > 0);
@@ -84,7 +102,7 @@ export function Composer(props: Props) {
       <div className="dr-composer-footer">
         <div className="dr-footer-left">
           {props.annotations.length > 0 && (
-            <div className="dr-anno-anchor">
+            <div className="dr-anno-anchor" ref={annoAnchorRef}>
               <button
                 className="dr-anno-chip"
                 onClick={() => setShowAnnotations((v) => !v)}
@@ -98,51 +116,55 @@ export function Composer(props: Props) {
                   {props.annotations.map((a) => (
                     <div key={a.index} className="dr-anno-item">
                       <div className="dr-anno-quote" title={a.quote}>
-                        #{a.index}「{a.quote.length > 50 ? `${a.quote.slice(0, 50)}…` : a.quote}」
+                        <span className="dr-anno-quote-text">
+                          #{a.index}「{a.quote.length > 50 ? `${a.quote.slice(0, 50)}…` : a.quote}」
+                        </span>
+                        <button
+                          className="dr-anno-del"
+                          title="删除"
+                          onClick={() =>
+                            props.onAnnotationsChange(
+                              props.annotations
+                                .filter((x) => x.index !== a.index)
+                                .map((x, i) => ({ ...x, index: i + 1 })),
+                            )
+                          }
+                        >
+                          <X size={13} strokeWidth={1.8} />
+                        </button>
                       </div>
-                      {editingIndex === a.index ? (
-                        <input
-                          autoFocus
-                          className="dr-anno-edit"
-                          value={editNote}
-                          placeholder="写点批注…"
-                          onChange={(e) => setEditNote(e.target.value)}
-                          onBlur={() => {
-                            updateNote(a.index, editNote.trim());
-                            setEditingIndex(null);
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                      <div className="dr-anno-note-row">
+                        {editingIndex === a.index ? (
+                          <input
+                            autoFocus
+                            className="dr-anno-edit"
+                            value={editNote}
+                            placeholder="写点批注…"
+                            onChange={(e) => setEditNote(e.target.value)}
+                            onBlur={() => {
                               updateNote(a.index, editNote.trim());
                               setEditingIndex(null);
-                            }
-                            if (e.key === 'Escape') setEditingIndex(null);
-                          }}
-                        />
-                      ) : (
-                        <button
-                          className="dr-anno-note-btn"
-                          onClick={() => {
-                            setEditingIndex(a.index);
-                            setEditNote(a.note);
-                          }}
-                        >
-                          {a.note || '添加批注'}
-                        </button>
-                      )}
-                      <button
-                        className="dr-anno-del"
-                        title="删除"
-                        onClick={() =>
-                          props.onAnnotationsChange(
-                            props.annotations
-                              .filter((x) => x.index !== a.index)
-                              .map((x, i) => ({ ...x, index: i + 1 })),
-                          )
-                        }
-                      >
-                        <X size={13} strokeWidth={1.8} />
-                      </button>
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                                updateNote(a.index, editNote.trim());
+                                setEditingIndex(null);
+                              }
+                              if (e.key === 'Escape') setEditingIndex(null);
+                            }}
+                          />
+                        ) : (
+                          <button
+                            className="dr-anno-note-btn"
+                            onClick={() => {
+                              setEditingIndex(a.index);
+                              setEditNote(a.note);
+                            }}
+                          >
+                            {a.note || '添加批注'}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -151,7 +173,7 @@ export function Composer(props: Props) {
           )}
         </div>
         <div className="dr-footer-right">
-          <div className="dr-model-anchor">
+          <div className="dr-model-anchor" ref={modelAnchorRef}>
             <button
               className="dr-model-btn"
               onClick={() => setShowModelMenu((v) => !v)}

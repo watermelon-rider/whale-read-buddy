@@ -40,8 +40,8 @@ export default defineContentScript({
 
     // 页面划词 → 原地编辑卡片 → 上报 background（写入草稿并同步全端）。
     mountAnnotationFlow({
-      onAdd: (quote, note) => {
-        void chrome.runtime.sendMessage({ kind: 'pageSelected', quote, note });
+      onAdd: (quote, note, anchor) => {
+        void chrome.runtime.sendMessage({ kind: 'pageSelected', quote, note, anchor });
       },
       onUpdate: (quote, note) => {
         void chrome.runtime.sendMessage({ kind: 'pageAnnotationUpdated', quote, note });

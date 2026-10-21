@@ -2,8 +2,8 @@
  * 消息列表：把会话事件投影为展示消息 + 流式增量气泡。
  * 页面注入/工具调用/压缩渲染为 12px 状态行（与思维链同字号，lucide 图标）。
  */
-import { useEffect, useMemo, useRef } from 'react';
-import { FileText, Shrink, Wrench, type LucideIcon } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowDown, FileText, Shrink, Wrench, type LucideIcon } from 'lucide-react';
 import type { SessionEvent } from '../../core/session/events';
 import type { AnnotationItem } from '../../types';
 import { MessageBubble, type DisplayMessage } from './MessageBubble';
@@ -84,45 +84,72 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
 
 export function MessageList({ events, streaming, onAnnotateSelection }: Props) {
   const items = useMemo(() => toDisplayItems(events), [events]);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  // 用户上滚时钉住当前位置，不回到底部；点按钮恢复跟随。
+  const [pinned, setPinned] = useState(true);
 
+  const scrollToBottom = (behavior: ScrollBehavior) => {
+    const el = listRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior });
+  };
+
+  // 新消息/流式增量到达时，仅在跟随状态下滚到底。
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [items.length, streaming?.content.length]);
+    if (pinned) scrollToBottom('auto');
+  }, [items.length, streaming?.content.length, streaming?.reasoning?.length, pinned]);
+
+  const handleScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    setPinned(el.scrollHeight - el.scrollTop - el.clientHeight < 48);
+  };
 
   return (
-    <div className="dr-msg-list">
-      <SelectionAnnotator onAnnotate={onAnnotateSelection}>
-        {items.length === 0 && !streaming && (
-          <div className="dr-empty">
-            我是你的陪读伙伴。打开想读的页面，直接提问即可；
-            也可以在页面或对话里划词批注，随问题一起发给我。
-          </div>
-        )}
-        {items.map((item) =>
-          item.kind === 'status' ? (
-            <div key={item.id} className="dr-status-line">
-              <item.icon size={13} strokeWidth={1.8} />
-              <span>{item.text}</span>
+    <div className="dr-msg-wrap">
+      <div className="dr-msg-list" ref={listRef} onScroll={handleScroll}>
+        <SelectionAnnotator onAnnotate={onAnnotateSelection}>
+          {items.length === 0 && !streaming && (
+            <div className="dr-empty">
+              我是你的陪读伙伴。打开想读的页面，直接提问即可；
+              也可以在页面或对话里划词批注，随问题一起发给我。
             </div>
-          ) : (
-            <div key={item.message.id} data-message-id={item.message.id}>
-              <MessageBubble message={item.message} />
-            </div>
-          ),
-        )}
-        {streaming && (
-          <MessageBubble
-            message={{
-              id: 'streaming',
-              role: 'assistant',
-              text: streaming.content,
-              ...(streaming.reasoning ? { reasoning: streaming.reasoning } : {}),
-            }}
-          />
-        )}
-        <div ref={bottomRef} />
-      </SelectionAnnotator>
+          )}
+          {items.map((item) =>
+            item.kind === 'status' ? (
+              <div key={item.id} className="dr-status-line">
+                <item.icon size={13} strokeWidth={1.8} />
+                <span>{item.text}</span>
+              </div>
+            ) : (
+              <div key={item.message.id} data-message-id={item.message.id}>
+                <MessageBubble message={item.message} />
+              </div>
+            ),
+          )}
+          {streaming && (
+            <MessageBubble
+              message={{
+                id: 'streaming',
+                role: 'assistant',
+                text: streaming.content,
+                ...(streaming.reasoning ? { reasoning: streaming.reasoning } : {}),
+              }}
+            />
+          )}
+        </SelectionAnnotator>
+      </div>
+      {!pinned && (
+        <button
+          className="dr-scroll-bottom"
+          title="回到最新"
+          onClick={() => {
+            setPinned(true);
+            scrollToBottom('smooth');
+          }}
+        >
+          <ArrowDown size={15} strokeWidth={2} />
+        </button>
+      )}
     </div>
   );
 }

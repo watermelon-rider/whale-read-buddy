@@ -10,6 +10,8 @@ export interface AnnotationItem {
   note: string;
   /** 批注来源：页面划词 / 对话内划词。 */
   source: { kind: 'page' } | { kind: 'chat'; messageId: string };
+  /** 页面批注的前后文锚点：quote 在页面出现多次时用于消歧。 */
+  anchor?: { prefix: string; suffix: string };
 }
 
 /** 提取后的页面内容（context/page 节点的载荷）。 */

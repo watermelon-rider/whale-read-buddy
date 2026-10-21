@@ -43,8 +43,10 @@ export function SelectionAnnotator({ children, onAnnotate }: Props) {
     }
     const rect = selection.getRangeAt(0).getBoundingClientRect();
     const containerRect = containerRef.current.getBoundingClientRect();
+    // 卡片宽度 300，钳制在容器内，不跑出面板右边。
+    const x = Math.max(4, Math.min(rect.left - containerRect.left, containerRect.width - 312));
     setToolbar({
-      x: rect.left - containerRect.left,
+      x,
       y: rect.bottom - containerRect.top + 6,
       quote: quote.slice(0, 2000),
       messageId,
