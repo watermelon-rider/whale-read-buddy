@@ -1,0 +1,76 @@
+/* DeepReader side panel 全局样式（参考 dsh web chat 区，收窄适配侧边栏）。 */
+:root {
+  --dr-bg: #ffffff;
+  --dr-bg-subtle: #f6f7f9;
+  --dr-border: #e5e7eb;
+  --dr-text: #1f2329;
+  --dr-text-secondary: #6b7280;
+  --dr-accent: #1a73e8;
+  --dr-accent-soft: #e8f0fe;
+  --dr-user-bubble: #eef2ff;
+  --dr-danger: #d93025;
+  --dr-radius: 8px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--dr-bg);
+  color: var(--dr-text);
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+button {
+  font-family: inherit;
+}
+
+.dr-icon-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--dr-text-secondary);
+  font-size: 13px;
+}
+
+.dr-icon-btn:hover {
+  background: var(--dr-bg-subtle);
+  color: var(--dr-text);
+}
+
+.dr-primary-btn {
+  border: none;
+  background: var(--dr-accent);
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.dr-primary-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.dr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--dr-accent-soft);
+  color: var(--dr-accent);
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+}

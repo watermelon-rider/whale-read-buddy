@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: true
+  spawn-sync: false
+onlyBuiltDependencies:
+  - esbuild
+verifyDepsBeforeRun: false

@@ -1,0 +1,65 @@
+/**
+ * 系统提示词组装（借鉴 dsh-persona / dsh-agent-instructions）。
+ * 段落式组装：persona → 指令链 → 工具指引。
+ */
+import { assembleInstructions } from './instructions';
+
+export const DEFAULT_PERSONA =
+  '你是一位博学而耐心的阅读伙伴，陪用户一起阅读当前网页。你的目标是帮助用户真正理解页面内容并深入学习相关知识：解释概念时深入浅出，主动指出内容中的要点与潜在的疑问，必要时补充背景知识。回答使用中文。';
+
+const TOOL_GUIDANCE = `【工具使用规约】
+- 当用户的问题超出当前页面内容、或需要最新/外部信息时，使用 web_search 搜索；一次调用可提交 1-4 个不同角度的查询。
+- 搜索结果只含摘要；需要阅读某个来源全文时，用 web_fetch 抓取该 URL。
+- 引用来源时在回答中带上对应 URL。
+- 当缺少关键信息且无法合理假设时，用 ask_user 向用户提问（给出推荐选项），而不是直接猜测。`;
+
+export interface SystemPromptInput {
+  persona: string;
+  globalInstructions: string;
+  siteInstructions?: string;
+  /** 是否启用工具（决定工具指引段是否出现）。 */
+  toolsEnabled: boolean;
+}
+
+export function assembleSystemPrompt(input: SystemPromptInput): string {
+  const sections: string[] = [];
+  const persona = input.persona.trim().length > 0 ? input.persona.trim() : DEFAULT_PERSONA;
+  sections.push(persona);
+
+  const instructions = assembleInstructions(input.globalInstructions, input.siteInstructions);
+  if (instructions) sections.push(instructions);
+
+  if (input.toolsEnabled) sections.push(TOOL_GUIDANCE);
+
+  sections.push(
+    '【对话约定】用户消息中可能包含以「其他信息：」开始的批注块（编号 + 原文 + 批注），请用「Annotation N：…」的格式逐条回应后再回答提问。页面内容以【当前阅读页面】节点给出；对话过程中用户可能跳转到新页面，届时会注入新的页面节点。',
+  );
+  return sections.join('\n\n');
+}
+
+/** time-context 节点文本（最小间隔由调用方控制，默认 10 分钟）。 */
+export const TIME_CONTEXT_MIN_INTERVAL_MS = 10 * 60 * 1000;
+
+export function buildTimeContext(
+  now: Date,
+  lastMessageAt: number | undefined,
+): { iso: string; timeZone: string; elapsedSeconds: number | 'unavailable' } {
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Shanghai';
+  const iso = new Intl.DateTimeFormat('sv-SE', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  })
+    .format(now)
+    .replace(' ', 'T');
+  const elapsedSeconds =
+    lastMessageAt === undefined
+      ? 'unavailable'
+      : Math.max(0, Math.round((now.getTime() - lastMessageAt) / 1000));
+  return { iso, timeZone, elapsedSeconds };
+}
