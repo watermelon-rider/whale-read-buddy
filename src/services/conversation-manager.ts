@@ -153,23 +153,27 @@ export class ConversationManager {
           ...(info.toolNames ? { toolNames: info.toolNames } : {}),
         }),
       buildSystemPrompt: () =>
-        // 站点指令读取是异步的，这里用同步闭包缓存：sendMessage 时先加载。
-        this.cachedSystemPrompt,
+        // 站点指令读取是异步的，这里读同步缓存：sendMessage 前已由 refreshSystemPrompt 填充。
+        this.systemPromptCache.get(origin) ??
+        assembleSystemPrompt({ persona: '', globalInstructions: '', toolsEnabled: true }),
     });
   }
 
-  private cachedSystemPrompt = '';
+  private systemPromptCache = new Map<string, string>();
 
   /** 在 sendMessage 前刷新系统提示词缓存（persona / 指令按当前设置组装）。 */
   async refreshSystemPrompt(origin: string): Promise<void> {
     const settings = await loadSettings();
     const siteInstructions = await loadSiteInstruction(origin);
-    this.cachedSystemPrompt = assembleSystemPrompt({
-      persona: settings.persona,
-      globalInstructions: settings.globalInstructions,
-      ...(siteInstructions ? { siteInstructions } : {}),
-      toolsEnabled: true,
-    });
+    this.systemPromptCache.set(
+      origin,
+      assembleSystemPrompt({
+        persona: settings.persona,
+        globalInstructions: settings.globalInstructions,
+        ...(siteInstructions ? { siteInstructions } : {}),
+        toolsEnabled: true,
+      }),
+    );
   }
 
   private buildExecutor(settings: Settings, conversationId: string): ToolExecutor {
