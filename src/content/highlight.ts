@@ -47,16 +47,15 @@ function dispatchEdit(quote: string): void {
 }
 
 function clearHighlights(): void {
-  for (const item of rendered) {
-    for (const span of item.spans) {
-      const parent = span.parentNode;
-      if (!parent) continue;
-      while (span.firstChild) parent.insertBefore(span.firstChild, span);
-      parent.removeChild(span);
-      parent.normalize();
-    }
-    item.marker.remove();
-  }
+  // 全局清理：不按实例记——扩展重载/重复注入可能留下孤儿实例的旧标记。
+  document.querySelectorAll(`.${MARKER_CLASS}`).forEach((n) => n.remove());
+  document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((span) => {
+    const parent = span.parentNode;
+    if (!parent) return;
+    while (span.firstChild) parent.insertBefore(span.firstChild, span);
+    parent.removeChild(span);
+    parent.normalize();
+  });
   rendered.length = 0;
 }
 

@@ -15,6 +15,39 @@
   border-bottom: 1px solid var(--dr-border);
 }
 
+.dr-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.dr-brand-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  flex: none;
+}
+
+.dr-brand-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .dr-brand-name {
+    display: none;
+  }
+}
+
+.dr-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
 .dr-chat-title {
   flex: 1;
   font-weight: 600;
@@ -447,7 +480,7 @@
   height: 32px;
   border-radius: 50%;
   border: none;
-  background: #1f2329;
+  background: #4e75df;
   color: #fff;
   font-size: 16px;
   line-height: 32px;
@@ -457,7 +490,7 @@
 }
 
 .dr-send:disabled {
-  background: #d1d5db;
+  background: #b8c8f2;
   cursor: default;
 }
 

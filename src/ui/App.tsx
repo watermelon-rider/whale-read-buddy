@@ -62,6 +62,7 @@ export function App() {
       return (
         <ChatView
           conversation={conversation}
+          onNew={() => void handleNew()}
           onOpenHistory={() => setView({ name: 'history' })}
           onOpenSettings={() => setView({ name: 'settings' })}
         />

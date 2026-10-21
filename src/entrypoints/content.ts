@@ -12,6 +12,11 @@ export default defineContentScript({
   matches: ['http://*/*', 'https://*/*'],
   runAt: 'document_idle',
   main() {
+    // 扩展重载/重复注入时旧实例的监听器已死但 UI 残留：
+    // 新实例挂载前清掉旧 UI（批注工具条宿主 + 高亮 + 角标），保证只有一份。
+    document.querySelectorAll('#deepreader-annotate-host').forEach((n) => n.remove());
+    renderHighlights([]); // 全量清空（空列表 = 只清理不绘制）
+
     let latestAnnotations: AnnotationItem[] = [];
 
     chrome.runtime.onMessage.addListener((raw, _sender, sendResponse) => {

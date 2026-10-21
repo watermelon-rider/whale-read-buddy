@@ -3,7 +3,7 @@
  * 状态来源 = 快照（loadHistory）+ 实时推送（Port 事件）。
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { History, Settings2 } from 'lucide-react';
+import { History, Plus, Settings2, X } from 'lucide-react';
 import type { SessionEvent } from '../../core/session/events';
 import type { AskUserQuestion } from '../../core/agent/tools';
 import type { StreamDelta } from '../../core/llm/stream';
@@ -16,6 +16,7 @@ import { MessageList } from './MessageList';
 
 interface Props {
   conversation: ConversationMeta;
+  onNew: () => void;
   onOpenHistory: () => void;
   onOpenSettings: () => void;
 }
@@ -27,7 +28,7 @@ interface TurnState {
   error?: string;
 }
 
-export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props) {
+export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }: Props) {
   const [events, setEvents] = useState<SessionEvent[]>([]);
   const [streaming, setStreaming] = useState<{ reasoning: string; content: string } | null>(null);
   const [turn, setTurn] = useState<TurnState>({ running: false });
@@ -158,15 +159,27 @@ export function ChatView({ conversation, onOpenHistory, onOpenSettings }: Props)
   return (
     <div className="dr-chat">
       <header className="dr-chat-header">
-        <button className="dr-icon-btn" onClick={onOpenHistory} title="会话列表">
-          <History size={16} strokeWidth={1.8} />
-        </button>
+        <div className="dr-brand">
+          <img className="dr-brand-icon" src={chrome.runtime.getURL('icons/icon-128.png')} alt="" />
+          <span className="dr-brand-name">WhaleRead Buddy</span>
+        </div>
         <div className="dr-chat-title" title={conversation.title}>
           {conversation.title}
         </div>
-        <button className="dr-icon-btn" onClick={onOpenSettings} title="设置">
-          <Settings2 size={16} strokeWidth={1.8} />
-        </button>
+        <div className="dr-header-actions">
+          <button className="dr-icon-btn" title="新会话" onClick={onNew}>
+            <Plus size={16} strokeWidth={1.8} />
+          </button>
+          <button className="dr-icon-btn" onClick={onOpenHistory} title="会话列表">
+            <History size={16} strokeWidth={1.8} />
+          </button>
+          <button className="dr-icon-btn" onClick={onOpenSettings} title="设置">
+            <Settings2 size={16} strokeWidth={1.8} />
+          </button>
+          <button className="dr-icon-btn" title="关闭" onClick={() => window.close()}>
+            <X size={16} strokeWidth={1.8} />
+          </button>
+        </div>
       </header>
       <MessageList
         conversationId={conversation.id}

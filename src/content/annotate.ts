@@ -90,6 +90,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
   initHighlightListeners();
 
   const host = document.createElement('div');
+  host.id = 'deepreader-annotate-host';
   host.style.cssText = HOST_CSS + 'display:none;';
   const shadow = host.attachShadow({ mode: 'open' });
   const style = document.createElement('style');
