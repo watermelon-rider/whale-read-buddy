@@ -3,13 +3,12 @@
  * - 用户消息：协议块隐藏，只显示提问 + 批注 chip（hover 查看）。
  * - 助手消息：Markdown 渲染；reasoning 折叠；Annotation N： 渲染为 hoverable chip。
  */
-import { Children, useMemo, useState, type ReactNode } from 'react';
-import { ChevronDown, ChevronRight, MessageSquareQuote } from 'lucide-react';
+import { Children, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { MessageSquareQuote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AnnotationItem } from '../../types';
 import { REPLY_ANNOTATION_RE, splitAnnotationProtocol } from '../../core/annotation/protocol';
-import { extractPseudoThought, PSEUDO_THOUGHT_FALLBACK } from '../../core/prompt/pseudo-thought';
 
 function AnnotationChips({ annotations }: { annotations: AnnotationItem[] }) {
   const [open, setOpen] = useState(false);
@@ -129,10 +128,28 @@ export interface DisplayMessage {
   role: 'user' | 'assistant';
   text: string;
   reasoning?: string;
+  /** 思维链耗时（毫秒）。 */
+  reasoningMs?: number;
+  /** 流式进行中的气泡。 */
+  streaming?: boolean;
   annotations?: AnnotationItem[];
   /** 最近一次携带批注的用户消息（供回复 chip 查找原文）。 */
   replyAnnotations?: AnnotationItem[];
   interrupted?: boolean;
+}
+
+/** 思维链滚动实况：只显示末尾几行，正文出现后即逝。 */
+function ThinkingLive({ text }: { text: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [text]);
+  return (
+    <div className="dr-thinking-live" ref={ref}>
+      {text}
+    </div>
+  );
 }
 
 export function MessageBubble({
@@ -140,15 +157,6 @@ export function MessageBubble({
 }: {
   message: DisplayMessage;
 }) {
-  const [showReasoning, setShowReasoning] = useState(false);
-  // 真实思维链原文不对用户展示；展示的是模型按约定输出的「脑回路：」伪思维行。
-  const hasRealReasoning = Boolean(message.reasoning && message.reasoning.length > 0);
-  const { thought, content: body } = useMemo(
-    () => extractPseudoThought(message.text),
-    [message.text],
-  );
-  const showThought = hasRealReasoning || thought !== undefined;
-
   if (message.role === 'user') {
     const { question } = splitAnnotationProtocol(message.text);
     return (
@@ -169,23 +177,18 @@ export function MessageBubble({
 
   return (
     <div className="dr-msg dr-msg-assistant">
-      {showThought && (
-        <div className="dr-reasoning">
-          <button className="dr-reasoning-toggle" onClick={() => setShowReasoning((v) => !v)}>
-            {showReasoning ? (
-              <ChevronDown size={13} strokeWidth={1.8} />
-            ) : (
-              <ChevronRight size={13} strokeWidth={1.8} />
-            )}
-            大肥鱼的脑回路
-          </button>
-          {showReasoning && (
-            <div className="dr-reasoning-body">{thought ?? PSEUDO_THOUGHT_FALLBACK}</div>
-          )}
+      {/* 思维链滚动实况：正文出现即逝 */}
+      {message.streaming && message.reasoning && message.text.length === 0 && (
+        <ThinkingLive text={message.reasoning} />
+      )}
+      {/* 思考结束后只留下耗时 */}
+      {message.reasoningMs !== undefined && (
+        <div className="dr-thought-line">
+          大肥鱼思考了 {(message.reasoningMs / 1000).toFixed(1)} 秒
         </div>
       )}
       <div className="dr-md">
-        <AssistantContent content={body} replyAnnotations={message.replyAnnotations} />
+        <AssistantContent content={message.text} replyAnnotations={message.replyAnnotations} />
       </div>
       {message.interrupted && <div className="dr-interrupted">（已中断）</div>}
     </div>

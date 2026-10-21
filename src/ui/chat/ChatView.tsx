@@ -21,6 +21,13 @@ interface Props {
   onOpenSettings: () => void;
 }
 
+interface StreamingState {
+  reasoning: string;
+  content: string;
+  reasoningStart?: number;
+  reasoningMs?: number;
+}
+
 interface TurnState {
   running: boolean;
   step?: number;
@@ -30,7 +37,7 @@ interface TurnState {
 
 export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }: Props) {
   const [events, setEvents] = useState<SessionEvent[]>([]);
-  const [streaming, setStreaming] = useState<{ reasoning: string; content: string } | null>(null);
+  const [streaming, setStreaming] = useState<StreamingState | null>(null);
   const [turn, setTurn] = useState<TurnState>({ running: false });
   const [question, setQuestion] = useState('');
   const [annotations, setAnnotations] = useState<AnnotationItem[]>([]);
@@ -76,10 +83,20 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
         case 'streamDelta': {
           if (event.conversationId !== conversationIdRef.current) return;
           const d: StreamDelta = event.delta;
-          setStreaming((prev) => ({
-            reasoning: (prev?.reasoning ?? '') + (d.reasoning ?? ''),
-            content: (prev?.content ?? '') + (d.content ?? ''),
-          }));
+          setStreaming((prev) => {
+            const next: StreamingState = {
+              reasoning: (prev?.reasoning ?? '') + (d.reasoning ?? ''),
+              content: (prev?.content ?? '') + (d.content ?? ''),
+              ...(prev?.reasoningStart ? { reasoningStart: prev.reasoningStart } : {}),
+              ...(prev?.reasoningMs ? { reasoningMs: prev.reasoningMs } : {}),
+            };
+            // 思维链计时：首个 reasoning 增量起，首个正文增量止。
+            if (d.reasoning && !next.reasoningStart) next.reasoningStart = Date.now();
+            if (d.content && next.reasoningStart && !next.reasoningMs) {
+              next.reasoningMs = Date.now() - next.reasoningStart;
+            }
+            return next;
+          });
           break;
         }
         case 'sessionEvent':

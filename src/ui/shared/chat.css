@@ -148,36 +148,24 @@
   color: var(--dr-text-secondary);
 }
 
-.dr-reasoning {
-  margin: 6px 0;
-}
-
-.dr-reasoning-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 2px 0;
-  font-size: 12px;
-  color: var(--dr-text-secondary);
-  border-radius: 6px;
-}
-
-.dr-reasoning-toggle:hover {
-  color: var(--dr-text);
-}
-
-.dr-reasoning-body {
+/* 思维链实况：一闪即逝的滚动窗口 */
+.dr-thinking-live {
   background: #efeff1;
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 12px;
   color: var(--dr-text-secondary);
   white-space: pre-wrap;
-  max-height: 240px;
+  word-break: break-word;
+  max-height: 66px;
   overflow-y: auto;
+  margin: 6px 0;
+}
+
+.dr-thought-line {
+  font-size: 12px;
+  color: var(--dr-text-secondary);
+  margin: 6px 0;
 }
 
 .dr-status-line {

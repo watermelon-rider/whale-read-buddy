@@ -37,6 +37,8 @@ export interface SessionEventMap {
     reasoning?: string;
     toolCalls?: ToolCall[];
     interrupted?: boolean;
+    /** 思维链耗时（毫秒），仅用于 UI 展示"思考了 N 秒"。 */
+    reasoningMs?: number;
   };
   /** 失败/取消的尝试；不进模型历史。 */
   'assistant/attempt': { error: string };

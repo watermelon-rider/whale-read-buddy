@@ -12,7 +12,12 @@ import { SelectionAnnotator } from './SelectionAnnotator';
 interface Props {
   conversationId: string;
   events: SessionEvent[];
-  streaming: { reasoning: string; content: string } | null;
+  streaming: {
+    reasoning: string;
+    content: string;
+    reasoningStart?: number;
+    reasoningMs?: number;
+  } | null;
   onAnnotateSelection: (quote: string, note: string, messageId: string) => void;
 }
 
@@ -69,6 +74,7 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
             role: 'assistant',
             text: e.data.content,
             ...(e.data.reasoning ? { reasoning: e.data.reasoning } : {}),
+          ...(e.data.reasoningMs ? { reasoningMs: e.data.reasoningMs } : {}),
             ...(lastAnnotations ? { replyAnnotations: lastAnnotations } : {}),
             ...(e.data.interrupted ? { interrupted: true } : {}),
           },
@@ -189,7 +195,9 @@ export function MessageList({
                 id: 'streaming',
                 role: 'assistant',
                 text: streaming.content,
+              streaming: true,
                 ...(streaming.reasoning ? { reasoning: streaming.reasoning } : {}),
+              ...(streaming.reasoningMs ? { reasoningMs: streaming.reasoningMs } : {}),
               }}
             />
           )}

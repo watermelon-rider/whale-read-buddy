@@ -5,7 +5,7 @@
  * 模型可见的一切在请求前都已提交进会话日志。
  */
 import type { Settings } from '../../types';
-import { streamChat, DeepSeekApiError, type ChatResult } from '../llm/deepseek';
+import { streamChat, type ChatResult } from '../llm/deepseek';
 import type { StreamDelta } from '../llm/stream';
 import type { Session } from '../session/session';
 import { dispatchToolCall, TOOL_SCHEMAS, type ToolExecutor } from './tools';
@@ -35,7 +35,6 @@ const MAX_STEPS_PER_TURN = 8;
 export class AgentLoop {
   private abortController?: AbortController;
   private lastTimeContextAt = 0;
-  private prefixFallbackLogged = false;
 
   constructor(private readonly deps: LoopDeps) {}
 
@@ -52,19 +51,34 @@ export class AgentLoop {
     try {
       // token 压力检查：必要时先压缩（溢出错误兜底在 catch 里做）。
       await maybeCompact(session, settings, signal);
-      this.prefixFallbackLogged = false;
 
       for (let step = 0; step < MAX_STEPS_PER_TURN; step++) {
         this.deps.onStep?.({ step });
         this.injectTimeContext();
 
-        const result = await this.runStep(input.thinkingEnabled, signal);
+        const timer = { reasoningStart: 0, reasoningMs: 0 };
+        const timingDelta = (d: Parameters<LoopDeps['onDelta']>[0]) => {
+          if (d.reasoning && timer.reasoningStart === 0) timer.reasoningStart = Date.now();
+          if (d.content && timer.reasoningStart > 0 && timer.reasoningMs === 0) {
+            timer.reasoningMs = Date.now() - timer.reasoningStart;
+          }
+          this.deps.onDelta(d);
+        };
+        const result = await this.runStep(input.thinkingEnabled, signal, timingDelta);
+
+        const reasoningMs =
+          timer.reasoningMs > 0
+            ? timer.reasoningMs
+            : timer.reasoningStart > 0
+              ? Date.now() - timer.reasoningStart
+              : undefined;
 
         if (result.interrupted) {
           session.append('assistant/message', {
             content: result.content,
             reasoning: result.reasoning || undefined,
             interrupted: true,
+            ...(reasoningMs ? { reasoningMs } : {}),
           });
           return {};
         }
@@ -73,6 +87,7 @@ export class AgentLoop {
           content: result.content,
           reasoning: result.reasoning || undefined,
           toolCalls: result.toolCalls.length > 0 ? result.toolCalls : undefined,
+          ...(reasoningMs ? { reasoningMs } : {}),
         });
 
         if (result.toolCalls.length === 0) return {};
@@ -102,7 +117,11 @@ export class AgentLoop {
     }
   }
 
-  private async runStep(thinkingEnabled: boolean, signal: AbortSignal): Promise<ChatResult> {
+  private async runStep(
+    thinkingEnabled: boolean,
+    signal: AbortSignal,
+    onDelta: LoopDeps['onDelta'],
+  ): Promise<ChatResult> {
     const { session, settings } = this.deps;
     // 系统提示词作为日志节点维护：变更时追加新节点（最新非空节点生效）。
     const prompt = this.deps.buildSystemPrompt();
@@ -117,31 +136,18 @@ export class AgentLoop {
     });
 
     const messages = session.deriveMessages();
-    const base = {
-      messages,
-      tools: TOOL_SCHEMAS,
-      model: settings.model,
-      thinkingEnabled,
-      reasoningEffort: settings.reasoningEffort,
-      signal,
-    };
-    try {
-      // 前缀续写强制「脑回路：」开头（提示词约束已被证明不可靠）。
-      return await streamChat(settings, { ...base, prefixContinuation: '脑回路：' }, this.deps.onDelta);
-    } catch (err) {
-      // Beta 前缀与 tools/思考模式的组合若被拒绝（400），退化为普通请求。
-      if (err instanceof DeepSeekApiError && err.status === 400) {
-        // 记一条 attempt 留证（排查用），对用户不可见。
-        if (!this.prefixFallbackLogged) {
-          this.prefixFallbackLogged = true;
-          session.append('assistant/attempt', {
-            error: '前缀续写被拒（HTTP 400），本次降级为普通请求',
-          });
-        }
-        return streamChat(settings, base, this.deps.onDelta);
-      }
-      throw err;
-    }
+    return streamChat(
+      settings,
+      {
+        messages,
+        tools: TOOL_SCHEMAS,
+        model: settings.model,
+        thinkingEnabled,
+        reasoningEffort: settings.reasoningEffort,
+        signal,
+      },
+      onDelta,
+    );
   }
 
   private latestSystemPrompt(): string | undefined {
@@ -166,7 +172,3 @@ export class AgentLoop {
   }
 }
 
-/** 供 UI 判断错误类型。 */
-export function isApiError(err: unknown): err is DeepSeekApiError {
-  return err instanceof DeepSeekApiError;
-}

@@ -22,11 +22,6 @@ export interface ChatRequest {
   thinkingEnabled: boolean;
   reasoningEffort: 'low' | 'high' | 'max';
   signal?: AbortSignal;
-  /**
-   * 对话前缀续写（Beta）：强制回答以该前缀开头（如「脑回路：」）。
-   * 请求走 {baseURL}/beta 端点；返回的 content 不含前缀，由客户端补回。
-   */
-  prefixContinuation?: string;
 }
 
 export interface ChatResult {
@@ -49,9 +44,8 @@ export class DeepSeekApiError extends Error {
   }
 }
 
-function endpoint(baseURL: string, beta: boolean): string {
-  const base = baseURL.replace(/\/+$/, '');
-  return `${beta ? `${base}/beta` : base}/chat/completions`;
+function endpoint(baseURL: string): string {
+  return `${baseURL.replace(/\/+$/, '')}/chat/completions`;
 }
 
 /**
@@ -68,19 +62,14 @@ export async function streamChat(
   }
   const body: Record<string, unknown> = {
     model: request.model,
-    messages: request.prefixContinuation
-      ? [
-          ...request.messages,
-          { role: 'assistant', content: request.prefixContinuation, prefix: true },
-        ]
-      : request.messages,
+    messages: request.messages,
     stream: true,
     thinking: { type: request.thinkingEnabled ? 'enabled' : 'disabled' },
   };
   if (request.thinkingEnabled) body.reasoning_effort = request.reasoningEffort;
   if (request.tools && request.tools.length > 0) body.tools = request.tools;
 
-  const response = await fetch(endpoint(settings.baseURL, Boolean(request.prefixContinuation)), {
+  const response = await fetch(endpoint(settings.baseURL), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -98,13 +87,7 @@ export async function streamChat(
   }
   if (!response.body) throw new DeepSeekApiError('响应无 body，无法流式读取。');
 
-  if (request.prefixContinuation) onDelta({ content: request.prefixContinuation });
-  const result: ChatResult = {
-    content: request.prefixContinuation ?? '',
-    reasoning: '',
-    toolCalls: [],
-    interrupted: false,
-  };
+  const result: ChatResult = { content: '', reasoning: '', toolCalls: [], interrupted: false };
   const toolAcc = new Map<number, { id: string; name: string; argumentsJson: string }>();
 
   try {
