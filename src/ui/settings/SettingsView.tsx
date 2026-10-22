@@ -3,10 +3,11 @@
  * API key 仅存 chrome.storage.local，从不上 sync。
  */
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Download, Upload } from 'lucide-react';
 import type { Settings } from '../../types';
 import { request } from '../shared/backend';
 import { t } from '../../i18n';
+import type { BackupFile } from '../../services/storage/backup';
 
 interface Props {
   conversationId: string;
@@ -17,6 +18,40 @@ export function SettingsView({ conversationId, onBack }: Props) {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [conversationPrompt, setConversationPrompt] = useState('');
   const [saved, setSaved] = useState(false);
+  const [backupNote, setBackupNote] = useState('');
+
+  const doExport = async () => {
+    const data = await request<BackupFile>({ kind: 'exportData' });
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `whale-read-buddy-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setBackupNote(t('exportDone', { n: data.conversations.length }));
+  };
+
+  const doImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        const parsed: unknown = JSON.parse(await file.text());
+        const result = await request<{ conversations: number; events: number }>({
+          kind: 'importData',
+          payload: parsed,
+        });
+        setBackupNote(t('importDone', { c: result.conversations, e: result.events }));
+      } catch {
+        setBackupNote(t('importInvalid'));
+      }
+    };
+    input.click();
+  };
 
   useEffect(() => {
     void (async () => {
@@ -101,6 +136,20 @@ export function SettingsView({ conversationId, onBack }: Props) {
                 }}
               />
             </label>
+          </div>
+        </div>
+        <div className="dr-settings-section">
+          <div className="dr-settings-heading">{t('settingsBackup')}</div>
+          <div className="dr-settings-card dr-backup-card">
+            <button className="dr-icon-btn dr-new-btn" onClick={() => void doExport()}>
+              <Download size={15} strokeWidth={1.8} />
+              {t('exportData')}
+            </button>
+            <button className="dr-icon-btn dr-new-btn" onClick={doImport}>
+              <Upload size={15} strokeWidth={1.8} />
+              {t('importData')}
+            </button>
+            {backupNote && <div className="dr-backup-note">{backupNote}</div>}
           </div>
         </div>
         <div className="dr-settings-footer">

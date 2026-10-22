@@ -1339,6 +1339,18 @@
   padding-bottom: 8px;
 }
 
+.dr-backup-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+}
+
+.dr-backup-note {
+  font-size: 12px;
+  color: var(--dr-text-secondary);
+}
+
 .dr-field-inline {
   flex-direction: row;
   align-items: center;

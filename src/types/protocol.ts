@@ -27,7 +27,9 @@ export type PanelRequest =
   | { kind: 'getConversationInstruction'; conversationId: string }
   | { kind: 'saveConversationInstruction'; conversationId: string; text: string }
   | { kind: 'answerAskUser'; requestId: string; answers: Record<string, string> }
-  | { kind: 'answerPendingAsk'; conversationId: string; toolCallId: string; answers: Record<string, string> };
+  | { kind: 'answerPendingAsk'; conversationId: string; toolCallId: string; answers: Record<string, string> }
+  | { kind: 'exportData' }
+  | { kind: 'importData'; payload: unknown };
 
 /** background → side panel 推送。 */
 export type PanelEvent =

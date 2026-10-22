@@ -6,6 +6,8 @@ import Dexie, { type EntityTable } from 'dexie';
 import type { AnnotationItem, ConversationMeta } from '../../types';
 import type { SessionEventType, SessionEventMap } from '../../core/session/events';
 
+const LEGACY_MIGRATED_KEY = 'legacyDbMigrated';
+
 export interface StoredEvent {
   id?: number;
   conversationId: string;
@@ -48,3 +50,34 @@ db.version(2).stores({
   siteInstructions: null,
   conversationInstructions: 'conversationId',
 });
+
+/**
+ * 一次性迁移：扩展改名（deepreader → whale-read-buddy）前的旧 Dexie 库。
+ * 仅当同一扩展存储里存在旧库时才合并；执行过一次就标记跳过。
+ */
+export async function migrateLegacyDb(): Promise<void> {
+  const flag = await chrome.storage.local.get(LEGACY_MIGRATED_KEY);
+  if (flag[LEGACY_MIGRATED_KEY]) return;
+  const legacy = new Dexie('deepreader');
+  try {
+    await legacy.open();
+    const convs = await legacy.table('conversations').toArray();
+    const events = await legacy.table('events').toArray();
+    const drafts = await legacy.table('drafts').toArray();
+    if (convs.length > 0 || events.length > 0 || drafts.length > 0) {
+      await db.transaction('rw', db.conversations, db.events, db.drafts, async () => {
+        for (const c of convs) await db.conversations.put(c as ConversationMeta);
+        for (const e of events) {
+          const { id: _drop, ...rest } = e as StoredEvent;
+          await db.events.add(rest as StoredEvent);
+        }
+        for (const d of drafts) await db.drafts.put(d as Draft);
+      });
+    }
+  } catch {
+    // 没有旧库或结构不符：无事发生。
+  } finally {
+    legacy.close();
+    await chrome.storage.local.set({ [LEGACY_MIGRATED_KEY]: true });
+  }
+}

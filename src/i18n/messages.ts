@@ -81,6 +81,13 @@ export const messages = {
     settingsConvPrompt: '会话提示词（仅对当前会话生效）',
     convPromptPlaceholder: '例：这次阅读重点关注代码实现细节。',
 
+    settingsBackup: '数据备份',
+    exportData: '导出全部会话',
+    importData: '导入备份',
+    exportDone: '已导出 {n} 个会话',
+    importDone: '已导入 {c} 个会话、{e} 条消息记录',
+    importInvalid: '不是有效的备份文件',
+
     // 进度环
     ringTitle: '上下文占用约 {pct}%（{tokens} tokens）',
     ringConfirm: '上下文占用约 {pct}%。要现在压缩上下文吗？',
@@ -220,6 +227,13 @@ export const messages = {
     systemPromptPlaceholder: 'e.g. Answer with conclusions first, then details.',
     settingsConvPrompt: 'Conversation prompt (this conversation only)',
     convPromptPlaceholder: 'e.g. Focus on code implementation details this time.',
+
+    settingsBackup: 'Backup',
+    exportData: 'Export all conversations',
+    importData: 'Import backup',
+    exportDone: 'Exported {n} conversations',
+    importDone: 'Imported {c} conversations and {e} events',
+    importInvalid: 'Not a valid backup file',
 
     ringTitle: 'Context usage ~{pct}% ({tokens} tokens)',
     ringConfirm: 'Context usage ~{pct}%. Compact the context now?',

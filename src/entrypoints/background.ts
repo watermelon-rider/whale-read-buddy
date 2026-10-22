@@ -13,6 +13,8 @@ import {
   upsertConversation,
 } from '../services/storage/sessions';
 import { loadDraft, saveDraft } from '../services/storage/drafts';
+import { exportBackup, importBackup } from '../services/storage/backup';
+import { migrateLegacyDb } from '../services/storage/db';
 import {
   loadConversationInstruction,
   loadSettings,
@@ -23,6 +25,9 @@ import type { PanelEvent, PanelRequest, PanelSnapshot } from '../types/protocol'
 import type { AnnotationItem } from '../types';
 
 export default defineBackground(() => {
+  // 一次性迁移改名前的旧 Dexie 库（deepreader → whale-read-buddy）。
+  void migrateLegacyDb();
+
   // 点工具栏图标打开 side panel；Arc 等不支持 chrome.sidePanel 的浏览器降级为弹出窗口。
   const hasSidePanel = Boolean(chrome.sidePanel?.open);
   if (hasSidePanel) {
@@ -91,7 +96,7 @@ export default defineBackground(() => {
     'deleteConversation', 'renameConversation', 'loadHistory', 'saveDraft', 'loadDraft', 'restoreHighlights',
     'getContextUsage', 'compactNow',
     'getSettings', 'saveSettings', 'getConversationInstruction', 'saveConversationInstruction',
-    'answerAskUser', 'answerPendingAsk',
+    'answerAskUser', 'answerPendingAsk', 'exportData', 'importData',
   ]);
 
   chrome.runtime.onMessage.addListener((raw: PanelRequest, sender, sendResponse) => {
@@ -190,6 +195,10 @@ export default defineBackground(() => {
       case 'answerAskUser':
         manager.answerAskUser(req.requestId, req.answers);
         return { ok: true };
+      case 'exportData':
+        return exportBackup();
+      case 'importData':
+        return importBackup(req.payload);
       case 'answerPendingAsk': {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (!tab?.id || !tab.url) throw new Error('无法定位当前标签页');
