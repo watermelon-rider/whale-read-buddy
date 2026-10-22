@@ -23,8 +23,35 @@ import type { PanelEvent, PanelRequest, PanelSnapshot } from '../types/protocol'
 import type { AnnotationItem } from '../types';
 
 export default defineBackground(() => {
-  // 点工具栏图标打开 side panel。
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+  // 点工具栏图标打开 side panel；Arc 等不支持 chrome.sidePanel 的浏览器降级为弹出窗口。
+  const hasSidePanel = Boolean(chrome.sidePanel?.open);
+  if (hasSidePanel) {
+    chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+  }
+
+  const openPopupFallback = () =>
+    chrome.windows.create({
+      url: chrome.runtime.getURL('sidepanel.html'),
+      type: 'popup',
+      width: 440,
+      height: 720,
+    });
+
+  chrome.action.onClicked.addListener((tab) => {
+    void (async () => {
+      // openPanelOnActionClick 生效的浏览器不会触发本事件；
+      // 走到这里说明需要手动开（或该浏览器根本没有 sidePanel）。
+      try {
+        if (hasSidePanel && tab.windowId !== undefined) {
+          await chrome.sidePanel.open({ windowId: tab.windowId });
+          return;
+        }
+      } catch {
+        // 继续走弹出窗口兜底。
+      }
+      await openPopupFallback();
+    })();
+  });
 
   // 安装/更新后，给所有已打开的 http(s) 标签页补注 content script
   //（Chrome 不会对扩展安装前已存在的标签页自动注入）。
