@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, MapPin, Pencil, Plus, X } from 'lucide-react';
 import type { ConversationMeta } from '../../types';
 import { request } from '../shared/backend';
+import { getLocale, t } from '../../i18n';
 
 interface Props {
   currentOrigin: string;
@@ -67,10 +68,10 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
         <button className="dr-icon-btn" onClick={onBack}>
           <ArrowLeft size={16} strokeWidth={1.8} />
         </button>
-        <div className="dr-chat-title">会话历史</div>
+        <div className="dr-chat-title">{t('historyTitle')}</div>
         <button className="dr-icon-btn dr-new-btn" onClick={onNew}>
           <Plus size={15} strokeWidth={1.8} />
-          新会话
+          {t('newConversation')}
         </button>
       </header>
       <div className="dr-history-list">
@@ -115,12 +116,12 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
                   >
                     <div className="dr-history-title">{c.title}</div>
                     <div className="dr-history-time">
-                      {new Date(c.updatedAt).toLocaleString('zh-CN')}
+                      {new Date(c.updatedAt).toLocaleString(getLocale() === 'zh' ? 'zh-CN' : 'en-US')}
                     </div>
                     <span className="dr-history-actions">
                       <button
                         className="dr-icon-btn"
-                        title="重命名"
+                        title={t('rename')}
                         onClick={(e) => {
                           e.stopPropagation();
                           setEditingId(c.id);
@@ -131,7 +132,7 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
                       </button>
                       <button
                         className="dr-icon-btn"
-                        title="删除会话"
+                        title={t('deleteConversation')}
                         onClick={(e) => {
                           e.stopPropagation();
                           setConfirmDeleteId(c.id);
@@ -145,19 +146,19 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
                         className="dr-confirm-pop"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="dr-confirm-text">删除这个会话？聊天记录将一并清除。</div>
+                        <div className="dr-confirm-text">{t('confirmDelete')}</div>
                         <div className="dr-confirm-row">
                           <button
                             className="dr-icon-btn"
                             onClick={() => setConfirmDeleteId(null)}
                           >
-                            取消
+                            {t('cancel')}
                           </button>
                           <button
                             className="dr-primary-btn dr-danger-btn"
                             onClick={() => void doDelete(c.id)}
                           >
-                            删除
+                            {t('delete')}
                           </button>
                         </div>
                       </div>
@@ -168,7 +169,7 @@ export function HistoryView({ currentOrigin, onOpen, onNew, onBack }: Props) {
             ))}
           </div>
         ))}
-        {items.length === 0 && <div className="dr-empty">还没有会话记录。</div>}
+        {items.length === 0 && <div className="dr-empty">{t('noConversations')}</div>}
       </div>
     </div>
   );

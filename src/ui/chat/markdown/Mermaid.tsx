@@ -4,6 +4,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Zoomable } from './Zoomable';
+import { t } from '../../../i18n';
 
 let mermaidPromise: Promise<typeof import('mermaid').default> | null = null;
 
@@ -57,7 +58,7 @@ export function Mermaid({ code }: { code: string }) {
     );
   }
   return (
-    <Zoomable label="投到浏览器窗口查看" copyText={code}>
+    <Zoomable label={t('openInWindow')} copyText={code}>
       <div className="dr-mermaid" dangerouslySetInnerHTML={{ __html: svg }} />
     </Zoomable>
   );

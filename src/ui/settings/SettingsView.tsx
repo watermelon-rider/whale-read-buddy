@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Check } from 'lucide-react';
 import type { Settings } from '../../types';
 import { request } from '../shared/backend';
+import { t } from '../../i18n';
 
 interface Props {
   conversationId: string;
@@ -49,15 +50,15 @@ export function SettingsView({ conversationId, onBack }: Props) {
         <button className="dr-icon-btn" onClick={onBack}>
           <ArrowLeft size={16} strokeWidth={1.8} />
         </button>
-        <div className="dr-chat-title">设置</div>
+        <div className="dr-chat-title">{t('settingsTitle')}</div>
         <span />
       </header>
       <div className="dr-settings-body">
         <div className="dr-settings-section">
-          <div className="dr-settings-heading">账号</div>
+          <div className="dr-settings-heading">{t('settingsAccount')}</div>
           <div className="dr-settings-card">
             <label className="dr-field dr-field-last">
-              <span>DeepSeek API Key · 仅存本地，不会同步到云端</span>
+              <span>{t('settingsApiKey')}</span>
               <input
                 type="password"
                 value={settings.apiKey}
@@ -68,32 +69,32 @@ export function SettingsView({ conversationId, onBack }: Props) {
           </div>
         </div>
         <div className="dr-settings-section">
-          <div className="dr-settings-heading">人设与提示词</div>
+          <div className="dr-settings-heading">{t('settingsPersonaSection')}</div>
           <div className="dr-settings-card">
             <label className="dr-field">
-              <span>人设</span>
+              <span>{t('settingsPersona')}</span>
               <textarea
                 rows={4}
                 value={settings.persona}
-                placeholder="留空则使用默认人设"
+                placeholder={t('personaPlaceholder')}
                 onChange={(e) => patch({ persona: e.target.value })}
               />
             </label>
             <label className="dr-field">
-              <span>系统提示词</span>
+              <span>{t('settingsSystemPrompt')}</span>
               <textarea
                 rows={4}
                 value={settings.globalInstructions}
-                placeholder="例：回答时先给结论，再展开论证。"
+                placeholder={t('systemPromptPlaceholder')}
                 onChange={(e) => patch({ globalInstructions: e.target.value })}
               />
             </label>
             <label className="dr-field dr-field-last">
-              <span>会话提示词（仅对当前会话生效）</span>
+              <span>{t('settingsConvPrompt')}</span>
               <textarea
                 rows={4}
                 value={conversationPrompt}
-                placeholder="例：这次阅读重点关注代码实现细节。"
+                placeholder={t('convPromptPlaceholder')}
                 onChange={(e) => {
                   setConversationPrompt(e.target.value);
                   setSaved(false);
@@ -105,7 +106,7 @@ export function SettingsView({ conversationId, onBack }: Props) {
         <div className="dr-settings-footer">
           <button className="dr-primary-btn dr-save-btn" onClick={() => void save()}>
             {saved && <Check size={14} strokeWidth={2} />}
-            {saved ? '已保存' : '保存'}
+            {saved ? t('saved') : t('save')}
           </button>
         </div>
       </div>

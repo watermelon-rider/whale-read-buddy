@@ -6,6 +6,7 @@
 import type { Settings } from '../../types';
 import { streamChat } from '../llm/deepseek';
 import type { ChatMessage, Session } from './session';
+import { t } from '../../i18n';
 
 export interface CompactionPolicy {
   /** 触发压缩的上下文占用比。 */
@@ -44,9 +45,6 @@ export function shouldCompact(
   return estimateTokens(session.deriveMessages()) >= contextWindowOf(model) * policy.thresholdRatio;
 }
 
-const SUMMARY_PROMPT =
-  '请把以下对话历史压缩为一份简洁的中文摘要，保留：用户在读的页面主题与 URL、关键结论、用户的批注要点、未完成的待办问题。直接输出摘要文本。';
-
 /**
  * 若超过阈值则执行一次压缩。压缩用一次额外模型请求，只保留返回的摘要文本。
  */
@@ -74,7 +72,7 @@ export async function maybeCompact(
     settings,
     {
       messages: [
-        { role: 'system', content: SUMMARY_PROMPT },
+        { role: 'system', content: t('compactionSummaryPrompt') },
         { role: 'user', content: headText },
       ],
       model: settings.model,

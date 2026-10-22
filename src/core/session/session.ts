@@ -5,6 +5,7 @@
 import type { AnnotationItem } from '../../types';
 import { buildAnnotationProtocol } from '../annotation/protocol';
 import type { SessionEvent, SessionEventMap, SessionEventType, ToolCall } from './events';
+import { t } from '../../i18n';
 
 /** OpenAI 兼容的消息格式（DeepSeek chat/completions 请求体）。 */
 export interface ChatMessage {
@@ -21,22 +22,24 @@ export interface ChatMessage {
 
 function formatPageContext(e: Extract<SessionEvent, { type: 'context/page' }>): string {
   const p = e.data;
-  const truncatedNote = p.truncated ? '（正文过长，已截断，保留了开头与结尾）' : '';
+  const truncatedNote = p.truncated ? t('pageContextTruncated') : '';
   return [
-    `【当前阅读页面${p.kind === 'pdf' ? '（PDF）' : ''}】`,
-    `标题：${p.title}`,
-    `URL：${p.url}`,
-    `正文${truncatedNote}：`,
+    t('pageContextHead', { pdf: p.kind === 'pdf' ? t('pageContextPdf') : '' }),
+    t('pageContextTitle', { title: p.title }),
+    t('pageContextUrl', { url: p.url }),
+    t('pageContextBody', { truncated: truncatedNote }),
     '',
     p.markdown,
   ].join('\n');
 }
 
 function formatTimeContext(e: Extract<SessionEvent, { type: 'context/time' }>): string {
-  const t = e.data;
+  const tc = e.data;
   const elapsed =
-    t.elapsedSeconds === 'unavailable' ? '未知' : `${t.elapsedSeconds} 秒前`;
-  return `【时间上下文】当前时间：${t.iso}（时区 ${t.timeZone}）；上一条消息距今：${elapsed}。`;
+    tc.elapsedSeconds === 'unavailable'
+      ? t('timeUnknown')
+      : t('secondsAgo', { s: tc.elapsedSeconds });
+  return t('timeContextLine', { iso: tc.iso, tz: tc.timeZone, elapsed });
 }
 
 /**
@@ -111,7 +114,7 @@ export class Session {
     }
     if (system) messages.push({ role: 'system', content: system });
     if (summary) {
-      messages.push({ role: 'user', content: `【早前对话摘要】\n${summary}` });
+      messages.push({ role: 'user', content: `${t('compactionSummaryHead')}\n${summary}` });
     }
 
     for (const e of this.events) {
@@ -176,7 +179,7 @@ export function repairDanglingToolCalls(messages: ChatMessage[]): ChatMessage[] 
           out.push({
             role: 'tool',
             tool_call_id: tc.id,
-            content: 'Error: 该工具调用被中断，没有返回结果。请忽略它继续回答用户。',
+            content: t('toolInterrupted'),
           });
         }
       }

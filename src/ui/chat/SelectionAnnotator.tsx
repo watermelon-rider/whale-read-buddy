@@ -4,6 +4,7 @@
  */
 import { useRef, useState, type ReactNode, type MouseEvent } from 'react';
 import { Check } from 'lucide-react';
+import { t } from '../../i18n';
 
 interface Props {
   children: ReactNode;
@@ -90,7 +91,7 @@ export function SelectionAnnotator({ children, onAnnotate }: Props) {
             setEditing(toolbar);
           }}
         >
-          批注
+          {t('annotate')}
         </button>
       )}
       {editing && (
@@ -102,7 +103,7 @@ export function SelectionAnnotator({ children, onAnnotate }: Props) {
             <input
               autoFocus
               className="dr-sel-input"
-              placeholder="添加可选评论…"
+              placeholder={t('annotatePlaceholder')}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               onKeyDown={(e) => {
@@ -116,7 +117,7 @@ export function SelectionAnnotator({ children, onAnnotate }: Props) {
                 }
               }}
             />
-            <button className="dr-sel-ok" onClick={confirm} aria-label="确认批注">
+            <button className="dr-sel-ok" onClick={confirm} aria-label={t('annotate')}>
               <Check size={14} strokeWidth={2.4} />
             </button>
           </div>

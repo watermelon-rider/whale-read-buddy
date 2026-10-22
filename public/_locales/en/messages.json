@@ -1,0 +1,5 @@
+{
+  "appName": { "message": "WhaleRead Buddy" },
+  "appDesc": { "message": "Read the current page and learn deeply by chatting with DeepSeek, with text annotations and proactive search." },
+  "openTitle": { "message": "Open WhaleRead Buddy" }
+}

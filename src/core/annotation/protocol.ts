@@ -1,8 +1,9 @@
 /**
  * 批注协议块的组装与解析（借鉴 dsh-annotation 的消息协议）。
- * 分隔符为「其他信息：」（无方括号），解析与气泡渲染均以此为准。
+ * 分隔符恒为「其他信息：」（跨语言稳定，历史消息可解析），批注正文文案跟随界面语言。
  */
 import type { AnnotationItem } from '../../types';
+import { t } from '../../i18n';
 
 export const ANNOTATION_DELIMITER = '其他信息：';
 
@@ -11,16 +12,16 @@ export function buildAnnotationProtocol(items: AnnotationItem[]): string {
   if (items.length === 0) return '';
   const lines: string[] = [
     ANNOTATION_DELIMITER,
-    `我批注了以下 ${items.length} 处内容：`,
+    t('annotationProtocolBody', { n: items.length }),
   ];
   for (const item of items) {
     lines.push(`${item.index}. 「${item.quote}」`);
-    lines.push(`   批注：${item.note || '（仅标记，无批注内容）'}`);
+    lines.push(
+      `   ${t('annotationProtocolNote', { note: item.note || t('annotationProtocolOnlyMark') })}`,
+    );
   }
   lines.push('');
-  lines.push(
-    `请先用「Annotation 1：…」到「Annotation ${items.length}：…」的格式逐条回应我的批注，然后回答我的提问。`,
-  );
+  lines.push(t('annotationProtocolAsk', { n: items.length }));
   return lines.join('\n');
 }
 

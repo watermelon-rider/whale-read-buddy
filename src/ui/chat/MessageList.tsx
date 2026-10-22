@@ -11,6 +11,7 @@ import { SelectionAnnotator } from './SelectionAnnotator';
 import { AnnoPopover } from '../shared/AnnoPopover';
 import { AskUserCard } from './AskUserCard';
 import type { AskUserQuestion } from '../../core/agent/tools';
+import { t } from '../../i18n';
 
 interface Props {
   conversationId: string;
@@ -98,7 +99,7 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           kind: 'status',
           id: `evt-${e.seq}`,
           icon: FileText,
-          text: `大肥鱼看了你的网页：${e.data.title}${e.data.truncated ? '（太长，只吃了一部分）' : ''}`,
+          text: `${t('statusReadPage', { title: e.data.title })}${e.data.truncated ? t('statusTruncated') : ''}`,
         });
         break;
       case 'tool/result':
@@ -107,10 +108,10 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           id: `evt-${e.seq}`,
           icon: Wrench,
           text: e.data.isError
-            ? `大肥鱼想用 ${e.data.name}，但没成功`
+            ? t('statusToolFail', { name: e.data.name })
             : e.data.name === 'ask_user'
-              ? `大肥鱼点点头${e.data.displayNote ? `（${e.data.displayNote}）` : ''}`
-              : `大肥鱼用 ${e.data.name} 查完啦`,
+              ? `${t('statusAskDone')}${e.data.displayNote ? `（${e.data.displayNote}）` : ''}`
+              : t('statusToolDone', { name: e.data.name }),
         });
         break;
       case 'compaction/summary':
@@ -118,7 +119,7 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           kind: 'status',
           id: `evt-${e.seq}`,
           icon: Shrink,
-          text: '大肥鱼消化了早前的对话',
+          text: t('statusCompacted'),
         });
         break;
       case 'ask/pending': {
@@ -251,7 +252,7 @@ export function MessageList({
         const badge = document.createElement('span');
         badge.className = 'dr-chat-anno-badge';
         badge.textContent = String(a.index);
-        badge.title = '查看批注';
+        badge.title = t('viewNote');
         badge.addEventListener('click', (e) => {
           e.stopPropagation();
           setAnnoDetail({ anno: a, rect: badge.getBoundingClientRect() });
@@ -275,10 +276,7 @@ export function MessageList({
         <SelectionAnnotator onAnnotate={onAnnotateSelection}>
           <div ref={marksRef}>
           {items.length === 0 && !streaming && (
-            <div className="dr-empty">
-              打开想读的页面，直接提问即可；
-              也可以在页面或对话里划词批注，随问题一起发给我。
-            </div>
+            <div className="dr-empty">{t('emptyChat')}</div>
           )}
           {items.map((item) =>
             item.kind === 'status' ? (
@@ -325,7 +323,7 @@ export function MessageList({
       {!pinned && (
         <button
           className="dr-scroll-bottom"
-          title="回到最新"
+          title={t('scrollToLatest')}
           onClick={() => {
             setPinned(true);
             scrollToBottom('smooth');

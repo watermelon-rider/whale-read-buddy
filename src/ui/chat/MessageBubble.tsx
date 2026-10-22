@@ -15,6 +15,7 @@ import { AnnoPopover } from '../shared/AnnoPopover';
 import { CalloutBlockquote, SortableTable, Steps, Timeline } from './markdown/blocks';
 import { Mermaid } from './markdown/Mermaid';
 import { MathBlock, MathInline } from './markdown/Math';
+import { t } from '../../i18n';
 
 interface AnnoDetail {
   anno: AnnotationItem;
@@ -68,7 +69,7 @@ function AnnotationChips({
     <span className="dr-anno-chips" ref={rootRef}>
       <button className="dr-chip dr-chip-bordered" onClick={toggleOpen}>
         <MessageSquareQuote size={13} strokeWidth={1.8} />
-        批注 ×{annotations.length}
+        {t('annotationsChip', { n: annotations.length })}
       </button>
       {open && (
         <div className={`dr-anno-pop${popDown ? ' dr-anno-pop-down' : ''}`}>
@@ -83,7 +84,7 @@ function AnnotationChips({
               <div className="dr-anno-quote">
                 #{a.index} 「{a.quote}」
               </div>
-              {a.note && <div className="dr-anno-note">批注：{a.note}</div>}
+              {a.note && <div className="dr-anno-note">{t('notePrefix', { note: a.note })}</div>}
             </button>
           ))}
         </div>
@@ -213,7 +214,7 @@ function PreBlock({ children, streaming }: { children?: ReactNode; streaming?: b
     if (props.className?.includes('math-display')) return <MathBlock tex={code} />;
     if (lang === 'mermaid') {
       // 流式中途的半成品围栏不送解析（会报几十个语法错误），显示占位。
-      if (streaming) return <div className="dr-mermaid-pending">图表生成中…</div>;
+      if (streaming) return <div className="dr-mermaid-pending">{t('mermaidPending')}</div>;
       return <Mermaid code={code} />;
     }
     if (lang === 'steps') return <Steps code={code} />;
@@ -264,7 +265,7 @@ function HoverMeta({ message }: { message: DisplayMessage }) {
       <span className="dr-msg-time">{formatTime(message.at)}</span>
       <button
         className="dr-icon-btn dr-copy-btn"
-        title="复制"
+        title={t('copy')}
         onClick={() => {
           void navigator.clipboard.writeText(copyText).then(() => {
             setCopied(true);
@@ -282,7 +283,7 @@ function HoverMeta({ message }: { message: DisplayMessage }) {
 function ThinkingLive({ text }: { text: string }) {
   const lastLine = text.replace(/\s+$/, '').split('\n').pop() ?? '';
   return (
-    <div className="dr-thinking-live" title="思维链实况">
+    <div className="dr-thinking-live">
       <span key={lastLine} className="dr-thinking-line">
         {lastLine}
       </span>
@@ -305,7 +306,7 @@ export function MessageBubble({
           {question.trim().length > 0 ? (
             <span className="dr-plain">{question}</span>
           ) : (
-            <span className="dr-plain dr-dim">（仅发送批注）</span>
+            <span className="dr-plain dr-dim">{t('onlyAnnotations')}</span>
           )}
           {message.annotations && message.annotations.length > 0 && (
             <AnnotationChips annotations={message.annotations} onShowDetail={setDetail} />
@@ -333,7 +334,7 @@ export function MessageBubble({
       {/* 思考结束后只留下耗时 */}
       {message.reasoningMs !== undefined && (
         <div className="dr-thought-line">
-          大肥鱼思考了 {(message.reasoningMs / 1000).toFixed(1)} 秒
+          {t('thoughtSeconds', { s: (message.reasoningMs / 1000).toFixed(1) })}
         </div>
       )}
       <div className="dr-md">
@@ -344,7 +345,7 @@ export function MessageBubble({
           streaming={message.streaming}
         />
       </div>
-      {message.interrupted && <div className="dr-interrupted">（已中断）</div>}
+      {message.interrupted && <div className="dr-interrupted">{t('interrupted')}</div>}
       <HoverMeta message={message} />
       {detail && (
         <AnnoPopover

@@ -13,6 +13,7 @@ import { connectPanelEvents, request } from '../shared/backend';
 import { Composer, type ModelChoice } from './Composer';
 import type { ContextUsage } from './ContextRing';
 import { MessageList } from './MessageList';
+import { t } from '../../i18n';
 
 interface Props {
   conversation: ConversationMeta;
@@ -198,17 +199,17 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
     <div className="dr-chat">
       <header className="dr-chat-header">
         {/* Chrome 原生侧边栏已带品牌与关闭按钮，这里不重复。 */}
-        <button className="dr-icon-btn" onClick={onOpenHistory} title="会话列表">
+        <button className="dr-icon-btn" onClick={onOpenHistory} title={t('historyTitle')}>
           <History size={16} strokeWidth={1.8} />
         </button>
         <div className="dr-chat-title" title={title}>
           {title}
         </div>
         <div className="dr-header-actions">
-          <button className="dr-icon-btn" title="新会话" onClick={onNew}>
+          <button className="dr-icon-btn" title={t('newConversation')} onClick={onNew}>
             <Plus size={16} strokeWidth={1.8} />
           </button>
-          <button className="dr-icon-btn" onClick={onOpenSettings} title="设置">
+          <button className="dr-icon-btn" onClick={onOpenSettings} title={t('settingsTitle')}>
             <Settings2 size={16} strokeWidth={1.8} />
           </button>
         </div>
@@ -231,13 +232,13 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
       {turn.running && (
         <div className="dr-status">
           {turn.toolNames?.includes('ask_user')
-            ? '大肥鱼在等你回复…'
+            ? t('statusWaiting')
             : turn.toolNames
-              ? `大肥鱼翻书中（${turn.toolNames.join('、')}）…`
-              : '大肥鱼干饭中…'}
+              ? t('statusTool', { tools: turn.toolNames.join('、') })
+              : t('statusEating')}
         </div>
       )}
-      {compacting && <div className="dr-status">大肥鱼正在压缩对话…</div>}
+      {compacting && <div className="dr-status">{t('statusCompacting')}</div>}
       {turn.error && <div className="dr-error">{turn.error}</div>}
       <Composer
         question={question}

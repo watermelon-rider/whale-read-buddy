@@ -4,13 +4,13 @@ export default defineConfig({
   srcDir: 'src',
   modules: ['@wxt-dev/module-react'],
   manifest: {
-    name: 'WhaleRead Buddy',
-    description: '读取当前页面内容，与 DeepSeek 对话深入学习，支持划词批注与主动搜索。',
+    name: '__MSG_appName__',
+    description: '__MSG_appDesc__',
     default_locale: 'zh_CN',
     permissions: ['sidePanel', 'storage', 'activeTab', 'scripting', 'tabs', 'offscreen'],
     host_permissions: ['<all_urls>'],
     action: {
-      default_title: '打开 WhaleRead Buddy',
+      default_title: '__MSG_openTitle__',
     },
     icons: {
       16: 'icons/icon-16.png',

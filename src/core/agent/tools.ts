@@ -3,6 +3,7 @@
  * 工具注册不依赖后端可用性：配置缺失时执行返回模型可读的结构化错误。
  */
 import type { ToolSchema } from '../llm/deepseek';
+import { t } from '../../i18n';
 
 export const SEARCH_MAX_QUERIES = 4;
 export const SEARCH_MAX_RESULTS = 8;
@@ -100,7 +101,11 @@ export interface ToolExecutionContext {
 export interface ToolExecutor {
   webSearch(queries: string[], ctx: ToolExecutionContext): Promise<string>;
   webFetch(url: string, ctx: ToolExecutionContext): Promise<string>;
-  askUser(questions: AskUserQuestion[], ctx: ToolExecutionContext): Promise<string>;
+  /** 返回模型可读文本 + 用户的答案列表（状态行展示用）。 */
+  askUser(
+    questions: AskUserQuestion[],
+    ctx: ToolExecutionContext,
+  ): Promise<{ text: string; answers: string[] }>;
 }
 
 /** 校验并规范化 web_search 参数；非法参数抛错（消息模型可读）。 */
@@ -172,12 +177,12 @@ export async function dispatchToolCall(
         return { content: await executor.webFetch(validateUrl(args), ctx), isError: false };
       case 'ask_user': {
         const questions = validateQuestions(args);
-        const content = await executor.askUser(questions, ctx);
-        // 从结果文本提取用户答案用于状态行展示。
-        const answers = [...content.matchAll(/回答：(.+)/g)].map((m) => m[1]?.trim() ?? '');
+        const result = await executor.askUser(questions, ctx);
         const displayNote =
-          answers.length > 0 ? `你回答了：${answers.join('、')}` : undefined;
-        return { content, isError: false, ...(displayNote ? { displayNote } : {}) };
+          result.answers.length > 0
+            ? t('statusAskAnswered', { answers: result.answers.join('、') })
+            : undefined;
+        return { content: result.text, isError: false, ...(displayNote ? { displayNote } : {}) };
       }
       default:
         return { content: `Error: unknown tool ${name}`, isError: true };

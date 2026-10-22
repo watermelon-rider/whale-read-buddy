@@ -7,6 +7,7 @@ import { RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
 import '../../ui/shared/theme.css';
 import '../../ui/shared/chat.css';
 import 'katex/dist/katex.min.css';
+import { t } from '../../i18n';
 
 function Viewer() {
   const [html, setHtml] = useState('');
@@ -19,7 +20,7 @@ function Viewer() {
     const key = new URLSearchParams(location.search).get('key');
     if (!key) return;
     void chrome.storage.session.get(key).then((raw) => {
-      setHtml((raw[key] as string) ?? '<p>内容已过期，请重新放大。</p>');
+      setHtml((raw[key] as string) ?? `<p>${t('viewerExpired')}</p>`);
       void chrome.storage.session.remove(key);
     });
   }, []);
@@ -59,14 +60,14 @@ function Viewer() {
   return (
     <div className="dr-viewer">
       <div className="dr-zoom-toolbar dr-viewer-toolbar">
-        <button className="dr-zoom-tool" title="缩小" onClick={() => applyScale(scale - 0.1)}>
+        <button className="dr-zoom-tool" title={t('zoomOut')} onClick={() => applyScale(scale - 0.1)}>
           <ZoomOut size={15} strokeWidth={2} />
         </button>
         <span className="dr-zoom-scale">{Math.round(scale * 100)}%</span>
-        <button className="dr-zoom-tool" title="放大" onClick={() => applyScale(scale + 0.1)}>
+        <button className="dr-zoom-tool" title={t('zoomIn')} onClick={() => applyScale(scale + 0.1)}>
           <ZoomIn size={15} strokeWidth={2} />
         </button>
-        <button className="dr-zoom-tool" title="重置" onClick={() => applyScale(1)}>
+        <button className="dr-zoom-tool" title={t('zoomReset')} onClick={() => applyScale(1)}>
           <RotateCcw size={14} strokeWidth={2} />
         </button>
       </div>

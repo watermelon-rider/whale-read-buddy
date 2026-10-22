@@ -12,7 +12,7 @@ import { mergeSearchResults, formatSearchResult } from '../src/core/web/format';
 import { mapSearchResponse } from '../src/core/web/search';
 import { contentHash, truncateMarkdown } from '../src/core/extract/html';
 import { validateQueries, validateUrl, validateQuestions } from '../src/core/agent/tools';
-import { assembleSystemPrompt, DEFAULT_PERSONA } from '../src/core/prompt/system';
+import { assembleSystemPrompt, defaultPersona } from '../src/core/prompt/system';
 import { assembleInstructions } from '../src/core/prompt/instructions';
 import type { AnnotationItem } from '../src/types';
 
@@ -224,7 +224,7 @@ describe('提示词组装', () => {
       globalInstructions: '',
       toolsEnabled: true,
     });
-    expect(p).toContain(DEFAULT_PERSONA.slice(0, 10));
+    expect(p).toContain(defaultPersona().slice(0, 10));
     expect(p).toContain('web_search');
     expect(p).toContain('Annotation N');
 

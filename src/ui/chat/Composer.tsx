@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { ArrowUp, ChevronDown, MessageSquareQuote, Square, X } from 'lucide-react';
 import type { AnnotationItem, ModelId, Settings } from '../../types';
+import { t } from '../../i18n';
 import { ContextRing, type ContextUsage } from './ContextRing';
 
 export interface ModelChoice {
@@ -13,18 +14,18 @@ export interface ModelChoice {
 }
 
 const MODEL_OPTIONS: Array<{ choice: ModelChoice; label: string }> = [
-  { choice: { model: 'deepseek-flash', reasoningEffort: 'low' }, label: 'deepseek-flash 低' },
-  { choice: { model: 'deepseek-flash', reasoningEffort: 'high' }, label: 'deepseek-flash 高' },
-  { choice: { model: 'deepseek-flash', reasoningEffort: 'max' }, label: 'deepseek-flash 最深' },
-  { choice: { model: 'deepseek-v4-pro', reasoningEffort: 'low' }, label: 'deepseek-v4-pro 低' },
-  { choice: { model: 'deepseek-v4-pro', reasoningEffort: 'high' }, label: 'deepseek-v4-pro 高' },
-  { choice: { model: 'deepseek-v4-pro', reasoningEffort: 'max' }, label: 'deepseek-v4-pro 最深' },
+  { choice: { model: 'deepseek-flash', reasoningEffort: 'low' }, label: `deepseek-flash ${t('effortLow')}` },
+  { choice: { model: 'deepseek-flash', reasoningEffort: 'high' }, label: `deepseek-flash ${t('effortHigh')}` },
+  { choice: { model: 'deepseek-flash', reasoningEffort: 'max' }, label: `deepseek-flash ${t('effortMax')}` },
+  { choice: { model: 'deepseek-v4-pro', reasoningEffort: 'low' }, label: `deepseek-v4-pro ${t('effortLow')}` },
+  { choice: { model: 'deepseek-v4-pro', reasoningEffort: 'high' }, label: `deepseek-v4-pro ${t('effortHigh')}` },
+  { choice: { model: 'deepseek-v4-pro', reasoningEffort: 'max' }, label: `deepseek-v4-pro ${t('effortMax')}` },
 ];
 
 const EFFORT_LABEL: Record<Settings['reasoningEffort'], string> = {
-  low: '低',
-  high: '高',
-  max: '最深',
+  low: t('effortLow'),
+  high: t('effortHigh'),
+  max: t('effortMax'),
 };
 
 interface Props {
@@ -104,10 +105,10 @@ export function Composer(props: Props) {
           <button
             className="dr-anno-chip dr-anno-chip-filled"
             onClick={() => setShowAnnotations((v) => !v)}
-            title="查看 / 编辑批注"
+            title={t('viewEditAnnotations')}
           >
             <MessageSquareQuote size={14} strokeWidth={1.8} />
-            批注 ×{props.annotations.length}
+            {t('annotationsChip', { n: props.annotations.length })}
           </button>
           {showAnnotations && (
             <div className="dr-anno-list">
@@ -119,7 +120,7 @@ export function Composer(props: Props) {
                     </span>
                     <button
                       className="dr-anno-del"
-                      title="删除"
+                      title={t('delete')}
                       onClick={() =>
                         props.onAnnotationsChange(
                           props.annotations
@@ -137,7 +138,7 @@ export function Composer(props: Props) {
                         autoFocus
                         className="dr-anno-edit dr-anno-edit-area"
                         value={editNote}
-                        placeholder="写点批注…"
+                        placeholder={t('writeNote')}
                         rows={1}
                         ref={(el) => {
                           if (el) {
@@ -176,7 +177,7 @@ export function Composer(props: Props) {
                           setEditNote(a.note);
                         }}
                       >
-                        {a.note || '添加批注'}
+                        {a.note || t('addNote')}
                       </button>
                     )}
                   </div>
@@ -189,7 +190,7 @@ export function Composer(props: Props) {
       <textarea
         ref={textareaRef}
         className="dr-input"
-        placeholder="给大肥鱼发消息…"
+        placeholder={t('composerPlaceholder')}
         value={props.question}
         rows={1}
         onChange={(e) => props.onQuestionChange(e.target.value)}
@@ -208,7 +209,7 @@ export function Composer(props: Props) {
             <button
               className="dr-model-btn"
               onClick={() => setShowModelMenu((v) => !v)}
-              title="选择模型与思考强度"
+              title={t('modelMenuTitle')}
             >
               {props.modelChoice.model} {EFFORT_LABEL[props.modelChoice.reasoningEffort]}
               <ChevronDown size={13} strokeWidth={1.8} className="dr-model-caret" />
@@ -236,7 +237,7 @@ export function Composer(props: Props) {
             )}
           </div>
           {props.running ? (
-            <button className="dr-send" onClick={props.onCancel} title="停止">
+            <button className="dr-send" onClick={props.onCancel} title={t('stopTitle')}>
               <Square size={12} strokeWidth={2} fill="currentColor" />
             </button>
           ) : (
@@ -244,7 +245,7 @@ export function Composer(props: Props) {
               className="dr-send"
               disabled={!canSend}
               onClick={props.onSend}
-              title="发送（Enter）"
+              title={t('sendTitle')}
             >
               <ArrowUp size={16} strokeWidth={2} />
             </button>

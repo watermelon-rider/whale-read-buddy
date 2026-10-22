@@ -7,6 +7,7 @@ import { request } from './shared/backend';
 import { ChatView } from './chat/ChatView';
 import { HistoryView } from './history/HistoryView';
 import { SettingsView } from './settings/SettingsView';
+import { t } from '../i18n';
 
 type View = { name: 'chat' } | { name: 'history' } | { name: 'settings' };
 
@@ -47,7 +48,7 @@ export function App() {
   }, [currentUrl]);
 
   if (!conversation) {
-    return <div className="dr-empty">正在打开会话…</div>;
+    return <div className="dr-empty">{t('openingConversation')}</div>;
   }
 
   const currentOrigin = originOf(currentUrl || conversation.origin);

@@ -5,6 +5,7 @@
 import { Children, isValidElement, useEffect, useRef, type ReactNode } from 'react';
 import { AlertTriangle, Info, Lightbulb } from 'lucide-react';
 import { Zoomable } from './Zoomable';
+import { t } from '../../../i18n';
 
 /** 从 children 中提取第一个字符串文本（递归）。 */
 function firstText(children: ReactNode): string {
@@ -44,20 +45,23 @@ function stripMarker(children: ReactNode): ReactNode {
   return walk(children);
 }
 
-const CALLOUT_VARIANTS: Record<string, { icon: typeof Info; label: string; cls: string }> = {
-  NOTE: { icon: Info, label: '注意', cls: 'note' },
-  TIP: { icon: Lightbulb, label: '提示', cls: 'tip' },
-  IMPORTANT: { icon: Info, label: '重要', cls: 'important' },
-  WARNING: { icon: AlertTriangle, label: '警告', cls: 'warning' },
-  CAUTION: { icon: AlertTriangle, label: '小心', cls: 'warning' },
-};
+function calloutVariants(): Record<string, { icon: typeof Info; label: string; cls: string }> {
+  return {
+    NOTE: { icon: Info, label: t('calloutNote'), cls: 'note' },
+    TIP: { icon: Lightbulb, label: t('calloutTip'), cls: 'tip' },
+    IMPORTANT: { icon: Info, label: t('calloutImportant'), cls: 'important' },
+    WARNING: { icon: AlertTriangle, label: t('calloutWarning'), cls: 'warning' },
+    CAUTION: { icon: AlertTriangle, label: t('calloutWarning'), cls: 'warning' },
+  };
+}
 
 /** blockquote 覆写：GitHub alert 语法（> [!NOTE] …）渲染为提示卡，否则普通引用。 */
 export function CalloutBlockquote({ children }: { children?: ReactNode }) {
   const first = firstText(children);
   const m = first.match(/^\s*\[!(\w+)\]/);
   if (!m) return <blockquote>{children}</blockquote>;
-  const variant = CALLOUT_VARIANTS[m[1]!.toUpperCase()] ?? CALLOUT_VARIANTS.NOTE!;
+  const variants = calloutVariants();
+  const variant = variants[m[1]!.toUpperCase()] ?? variants.NOTE!;
   const Icon = variant.icon;
   return (
     <div className={`dr-callout dr-callout-${variant.cls}`}>
@@ -74,7 +78,7 @@ export function CalloutBlockquote({ children }: { children?: ReactNode }) {
 export function Steps({ code }: { code: string }) {
   const rows = code.trim().split('\n').filter((l) => l.trim().length > 0);
   return (
-    <Zoomable label="投到浏览器窗口查看" copyText={code}>
+    <Zoomable label={t('openInWindow')} copyText={code}>
       <div className="dr-steps">
       {rows.map((row, i) => {
         const [title, ...rest] = row.split('|');
@@ -97,7 +101,7 @@ export function Steps({ code }: { code: string }) {
 export function Timeline({ code }: { code: string }) {
   const rows = code.trim().split('\n').filter((l) => l.trim().length > 0);
   return (
-    <Zoomable label="投到浏览器窗口查看" copyText={code}>
+    <Zoomable label={t('openInWindow')} copyText={code}>
       <div className="dr-timeline">
         {rows.map((row, i) => {
           const [time, ...rest] = row.split('|');
@@ -161,7 +165,7 @@ export function SortableTable({ children }: { children?: ReactNode }) {
   }, [children]);
 
   return (
-    <Zoomable label="投到浏览器窗口查看">
+    <Zoomable label={t('openInWindow')}>
       <table ref={ref}>{children}</table>
     </Zoomable>
   );

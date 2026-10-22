@@ -3,6 +3,7 @@
  * 自适应宽度、窗口内钳制（不超出屏幕）、失焦/点击外部/Esc 自动关闭。
  */
 import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { t } from '../../i18n';
 
 interface Props {
   /** 触发元素的屏幕位置。 */
@@ -59,7 +60,9 @@ export function AnnoPopover({ rect, quote, note, onClose }: Props): ReactElement
       }}
     >
       <div className="dr-anno-detail-quote">「{quote}」</div>
-      {note.trim().length > 0 && <div className="dr-anno-detail-note">批注:{note}</div>}
+      {note.trim().length > 0 && (
+        <div className="dr-anno-detail-note">{t('notePrefix', { note })}</div>
+      )}
     </div>
   );
 }

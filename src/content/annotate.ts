@@ -5,6 +5,7 @@
  * 失焦/点击他处/滚动/Esc 都会收起按钮与卡片。
  */
 import { initHighlightListeners, rectOfQuote } from './highlight';
+import { t } from '../i18n';
 
 export interface PageAnnotationHandlers {
   onAdd: (quote: string, note: string, anchor?: { prefix: string; suffix: string }) => void;
@@ -149,7 +150,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
     hide();
     const btn = document.createElement('button');
     btn.className = 'dr-btn dr-live';
-    btn.textContent = '批注';
+    btn.textContent = t('annotate');
     shadow.appendChild(btn);
     host.style.left = `${rect.left + window.scrollX}px`;
     host.style.top = `${rect.bottom + window.scrollY + 6}px`;
@@ -178,7 +179,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
 
     const input = document.createElement('textarea');
     input.className = 'dr-input';
-    input.placeholder = '添加可选评论…';
+    input.placeholder = t('annotatePlaceholder');
     input.rows = 1;
     input.value = state.mode === 'edit' ? handlers.getNote(state.quote) : '';
     // 自适应内容高度（自动换行，上限 120px 出内部滚动条）。
@@ -196,7 +197,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
     if (state.mode === 'edit') {
       const del = document.createElement('button');
       del.className = 'dr-del';
-      del.textContent = '删除';
+      del.textContent = t('delete');
       del.addEventListener('click', () => {
         handlers.onRemove(state.quote);
         closeEditor();

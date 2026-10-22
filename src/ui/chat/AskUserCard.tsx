@@ -3,6 +3,7 @@
  */
 import { useState } from 'react';
 import type { AskUserQuestion } from '../../core/agent/tools';
+import { t } from '../../i18n';
 
 interface Props {
   questions: AskUserQuestion[];
@@ -40,7 +41,7 @@ export function AskUserCard({ questions, onSubmit }: Props) {
 
   return (
     <div className="dr-ask-card">
-      <div className="dr-ask-title">大肥鱼想问你：</div>
+      <div className="dr-ask-title">{t('askTitle')}</div>
       {questions.map((q) => (
         <div key={q.id} className="dr-ask-question">
           {q.header && <div className="dr-ask-header">{q.header}</div>}
@@ -60,7 +61,7 @@ export function AskUserCard({ questions, onSubmit }: Props) {
           </div>
           <input
             className="dr-ask-custom"
-            placeholder="或者输入其他回答…"
+            placeholder={t('askCustomPlaceholder')}
             value={custom[q.id] ?? ''}
             onChange={(e) => {
               const v = e.target.value;
@@ -73,7 +74,7 @@ export function AskUserCard({ questions, onSubmit }: Props) {
       {showSubmit && (
         <div className="dr-ask-submit-row">
           <button className="dr-primary-btn dr-ask-submit" onClick={() => onSubmit(merged())}>
-            提交回答
+            {t('askSubmit')}
           </button>
         </div>
       )}

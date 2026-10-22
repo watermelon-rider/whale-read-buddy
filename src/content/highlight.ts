@@ -4,6 +4,7 @@
  * 全量重绘；精确匹配不到的 quote 跳过（页面已变）。
  */
 import type { AnnotationItem } from '../types';
+import { t } from '../i18n';
 
 const HIGHLIGHT_CLASS = 'deepreader-draft-highlight';
 const MARKER_CLASS = 'deepreader-draft-marker';
@@ -133,7 +134,7 @@ function wrapAt(nodes: TextNodeEntry[], fullStart: number, length: number, index
   target.splitText(length);
   const span = document.createElement('span');
   span.className = HIGHLIGHT_CLASS;
-  span.title = `批注 #${index}（未发送）`;
+  span.title = t('annotationMarkerTitle', { n: index });
   target.parentNode?.replaceChild(span, target);
   span.appendChild(target);
 

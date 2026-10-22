@@ -36,6 +36,7 @@ import { clearDraft, loadDraft, saveDraft } from './storage/drafts';
 import { loadConversationInstruction, loadSettings } from './storage/settings';
 import { extractPageForTab } from './extract-service';
 import type { PanelEvent } from '../types/protocol';
+import { t } from '../i18n';
 
 const LAST_CONVERSATION_KEY = 'lastActiveConversationId';
 
@@ -240,7 +241,7 @@ export class ConversationManager {
           messages: [
             {
               role: 'user',
-              content: `请为这段对话起一个简短标题（不超过 12 个字，只输出标题本身，不要引号）：\n\n${question.slice(0, 500)}`,
+              content: t('titlePrompt', { q: question.slice(0, 500) }),
             },
           ],
           model: settings.model,
@@ -311,7 +312,7 @@ export class ConversationManager {
     const questions = pending?.type === 'ask/pending' ? pending.data.questions : [];
 
     const resultLines = questions.map(
-      (q) => `- ${q.question}\n  回答：${answers[q.id] ?? '（未回答）'}`,
+      (q) => `- ${q.question}\n  ${answers[q.id] ?? t('askUnanswered')}`,
     );
     const answersText = questions
       .map((q) => answers[q.id] ?? '')
@@ -320,13 +321,13 @@ export class ConversationManager {
     live.session.append('tool/result', {
       toolCallId,
       name: 'ask_user',
-      content: `用户的回答：\n${resultLines.join('\n')}`,
-      ...(answersText ? { displayNote: `你补答了：${answersText}` } : {}),
+      content: `${t('askResultHead')}\n${resultLines.join('\n')}`,
+      ...(answersText ? { displayNote: t('statusAskLate', { answers: answersText }) } : {}),
     });
 
     const text = [
-      '我之前没来得及回答你的提问，现在补答：',
-      ...questions.map((q) => `Q：${q.question}\nA：${answers[q.id] ?? '（跳过）'}`),
+      t('lateAnswerPrefix'),
+      ...questions.map((q) => `Q: ${q.question}\nA: ${answers[q.id] ?? t('askSkipped')}`),
     ].join('\n');
     await this.sendMessage(conversationId, tabId, pageUrl, text, [], live.thinkingEnabled);
   }
@@ -389,17 +390,22 @@ export class ConversationManager {
     conversationId: string,
     questions: AskUserQuestion[],
     signal?: AbortSignal,
-  ): Promise<string> {
+  ): Promise<{ text: string; answers: string[] }> {
     const requestId = crypto.randomUUID();
-    return new Promise<string>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       this.pendingAsks.set(requestId, {
         conversationId,
         resolve: (answers) => {
           const lines = questions.map((q) => {
-            const answer = answers[q.id] ?? '（用户未回答）';
-            return `- ${q.question}\n  回答：${answer}`;
+            const answer = answers[q.id] ?? t('askUnanswered');
+            return `- ${q.question}\n  ${answer}`;
           });
-          resolve(`用户的回答：\n${lines.join('\n')}`);
+          resolve({
+            text: `${t('askResultHead')}\n${lines.join('\n')}`,
+            answers: questions
+              .map((q) => answers[q.id])
+              .filter((a): a is string => typeof a === 'string' && a.trim().length > 0),
+          });
         },
         reject,
       });

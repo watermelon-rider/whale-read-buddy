@@ -3,6 +3,7 @@
  * 点击弹出确认气泡，可手动触发压缩（测试压缩机制用）。
  */
 import { useEffect, useRef, useState } from 'react';
+import { t } from '../../i18n';
 
 export interface ContextUsage {
   tokens: number;
@@ -45,7 +46,7 @@ export function ContextRing({ usage, onCompact, compacting }: Props) {
       <button
         className="dr-ring-btn"
         disabled={compacting}
-        title={`上下文占用约 ${pct}%（${tokensK} tokens）`}
+        title={t('ringTitle', { pct, tokens: tokensK })}
         onClick={() => setConfirming((v) => !v)}
       >
         <svg width="18" height="18" viewBox="0 0 18 18">
@@ -65,10 +66,10 @@ export function ContextRing({ usage, onCompact, compacting }: Props) {
       </button>
       {confirming && (
         <div className="dr-ring-pop">
-          <div className="dr-ring-pop-text">上下文占用约 {pct}%。要现在压缩上下文吗？</div>
+          <div className="dr-ring-pop-text">{t('ringConfirm', { pct })}</div>
           <div className="dr-ring-pop-row">
             <button className="dr-icon-btn" onClick={() => setConfirming(false)}>
-              取消
+              {t('cancel')}
             </button>
             <button
               className="dr-primary-btn"
@@ -77,7 +78,7 @@ export function ContextRing({ usage, onCompact, compacting }: Props) {
                 onCompact();
               }}
             >
-              压缩
+              {t('compact')}
             </button>
           </div>
         </div>

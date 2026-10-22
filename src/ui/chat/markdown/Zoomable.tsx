@@ -5,6 +5,7 @@
 import { useState, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Check, Copy, ExternalLink } from 'lucide-react';
+import { t } from '../../../i18n';
 
 interface Props {
   children: ReactNode;
@@ -29,7 +30,7 @@ export function Zoomable({ children, label, copyText }: Props) {
         {copyText !== undefined && (
           <button
             className="dr-zoom-btn"
-            title="复制源文本"
+            title={t('copySource')}
             onClick={() => {
               void navigator.clipboard.writeText(copyText).then(() => {
                 setCopied(true);
@@ -42,7 +43,7 @@ export function Zoomable({ children, label, copyText }: Props) {
         )}
         <button
           className="dr-zoom-btn"
-          title={label ?? '投到浏览器窗口查看'}
+          title={label ?? t('openInWindow')}
           onClick={() => void openInWindow()}
         >
           <ExternalLink size={13} strokeWidth={2} />

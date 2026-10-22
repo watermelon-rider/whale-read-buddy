@@ -9,6 +9,7 @@
 import katex from 'katex';
 import { useMemo } from 'react';
 import { Zoomable } from './Zoomable';
+import { t } from '../../../i18n';
 
 function renderTex(tex: string, displayMode: boolean): string {
   return katex.renderToString(tex, {
@@ -21,7 +22,7 @@ function renderTex(tex: string, displayMode: boolean): string {
 export function MathBlock({ tex }: { tex: string }) {
   const html = useMemo(() => renderTex(tex, true), [tex]);
   return (
-    <Zoomable label="投到浏览器窗口查看" copyText={tex}>
+    <Zoomable label={t('openInWindow')} copyText={tex}>
       <div className="dr-math-block" dangerouslySetInnerHTML={{ __html: html }} />
     </Zoomable>
   );
