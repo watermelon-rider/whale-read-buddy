@@ -1,6 +1,6 @@
 {
-  "name": "deepreader",
-  "description": "陪读型 Chrome 扩展：读取页面内容，基于 DeepSeek 的对话式阅读伙伴",
+  "name": "whale-read-buddy",
+  "description": "大肥鱼陪读 / WhaleRead Buddy — 读取页面内容的 DeepSeek 对话式陪读扩展",
   "version": "0.1.0",
   "private": true,
   "type": "module",
