@@ -4,13 +4,15 @@
  */
 import { useEffect, useRef, useState, type ReactNode, type WheelEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { Maximize2, RotateCcw, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ExternalLink, Maximize2, RotateCcw, X, ZoomIn, ZoomOut } from 'lucide-react';
 
 export function Zoomable({ children, label }: { children: ReactNode; label?: string }) {
   const [open, setOpen] = useState(false);
   const [scale, setScale] = useState(1);
   const [baseSize, setBaseSize] = useState<{ w: number; h: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -30,14 +32,36 @@ export function Zoomable({ children, label }: { children: ReactNode; label?: str
     };
   }, [open]);
 
-  const zoom = (delta: number) =>
-    setScale((s) => Math.min(4, Math.max(0.25, Math.round((s + delta) * 100) / 100)));
+  /** 同心缩放：以视口中心为锚点，缩放后补偿滚动位置，画面不漂移。 */
+  const applyScale = (next: number) => {
+    const clamped = Math.min(4, Math.max(0.25, Math.round(next * 100) / 100));
+    const vp = viewportRef.current;
+    if (vp) {
+      const cx = vp.scrollLeft + vp.clientWidth / 2;
+      const cy = vp.scrollTop + vp.clientHeight / 2;
+      const f = clamped / scale;
+      requestAnimationFrame(() => {
+        vp.scrollLeft = cx * f - vp.clientWidth / 2;
+        vp.scrollTop = cy * f - vp.clientHeight / 2;
+      });
+    }
+    setScale(clamped);
+  };
+  const zoom = (delta: number) => applyScale(scale + delta);
 
   const onWheel = (e: WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       zoom(e.deltaY < 0 ? 0.1 : -0.1);
     }
+  };
+
+  /** 在整个浏览器窗口（新标签页）中查看：内容序列化为 HTML 经 storage.session 传递。 */
+  const openInWindow = async () => {
+    const html = renderToStaticMarkup(<div className="dr-md">{children}</div>);
+    const key = `viewer:${crypto.randomUUID()}`;
+    await chrome.storage.session.set({ [key]: html });
+    await chrome.tabs.create({ url: chrome.runtime.getURL(`viewer.html?key=${key}`) });
   };
 
   return (
@@ -64,9 +88,16 @@ export function Zoomable({ children, label }: { children: ReactNode; label?: str
               <button
                 className="dr-zoom-tool"
                 title="重置"
-                onClick={() => setScale(1)}
+                onClick={() => applyScale(1)}
               >
                 <RotateCcw size={14} strokeWidth={2} />
+              </button>
+              <button
+                className="dr-zoom-tool"
+                title="在整个浏览器窗口中打开"
+                onClick={() => void openInWindow()}
+              >
+                <ExternalLink size={14} strokeWidth={2} />
               </button>
             </div>
             <button className="dr-zoom-close" title="关闭" onClick={() => setOpen(false)}>
@@ -74,6 +105,7 @@ export function Zoomable({ children, label }: { children: ReactNode; label?: str
             </button>
             <div
               className="dr-zoom-viewport"
+              ref={viewportRef}
               onClick={(e) => e.stopPropagation()}
               onWheel={onWheel}
             >
@@ -88,7 +120,10 @@ export function Zoomable({ children, label }: { children: ReactNode; label?: str
                 <div
                   ref={contentRef}
                   className="dr-zoom-inner"
-                  style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}
+                  style={{
+                    transform: `translateX(-50%) scale(${scale})`,
+                    transformOrigin: 'top center',
+                  }}
                 >
                   {children}
                 </div>

@@ -521,7 +521,10 @@
   padding: 24px;
   width: max-content;
   min-width: min(600px, 92vw);
-  margin: 48px auto;
+  /* 同心缩放：绝对定位居中，缩放原点为顶部中心，配合滚动补偿 */
+  position: absolute;
+  top: 48px;
+  left: 50%;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
 }
 
@@ -575,10 +578,21 @@
   text-align: center;
 }
 
+/* 整窗口查看器 */
+.dr-viewer {
+  height: 100vh;
+  background: #f2f3f5;
+}
+
+.dr-viewer-toolbar {
+  top: 16px;
+}
+
 .dr-zoom-close {
   position: fixed;
   top: 14px;
   right: 14px;
+  z-index: 101;
   width: 34px;
   height: 34px;
   border-radius: 50%;
