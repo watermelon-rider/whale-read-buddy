@@ -6,8 +6,8 @@
 import type { AnnotationItem } from '../types';
 import { t } from '../i18n';
 
-const HIGHLIGHT_CLASS = 'deepreader-draft-highlight';
-const MARKER_CLASS = 'deepreader-draft-marker';
+const HIGHLIGHT_CLASS = 'whalereader-draft-highlight';
+const MARKER_CLASS = 'whalereader-draft-marker';
 
 const STYLE = `
 .${HIGHLIGHT_CLASS} {
@@ -44,7 +44,7 @@ function ensureStyle(): void {
 }
 
 function dispatchEdit(quote: string): void {
-  document.dispatchEvent(new CustomEvent('deepreader:edit-annotation', { detail: { quote } }));
+  document.dispatchEvent(new CustomEvent('whalereader:edit-annotation', { detail: { quote } }));
 }
 
 function clearHighlights(): void {

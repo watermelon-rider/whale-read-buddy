@@ -15,11 +15,16 @@ export default defineContentScript({
     // 扩展重载/重复注入时旧实例的监听器已死但 UI 残留：
     // 新实例挂载前清掉新旧各代的 UI（含无 id 的旧版宿主），保证只有一份。
     document
-      .querySelectorAll('#deepreader-annotate-host, #deepreader-annotate-toolbar')
+      .querySelectorAll(
+        // 兼容清理新旧各代宿主 id。
+        '#whalereader-annotate-host, #deepreader-annotate-host, #deepreader-annotate-toolbar',
+      )
       .forEach((n) => n.remove());
     // 无 id 的中间代孤儿宿主：按内联样式特征（我们专属的超高 z-index）识别。
     document
-      .querySelectorAll('div[style*="2147483647"]:not(#deepreader-annotate-host)')
+      .querySelectorAll(
+        'div[style*="2147483647"]:not(#whalereader-annotate-host):not(#deepreader-annotate-host)',
+      )
       .forEach((n) => n.remove());
     renderHighlights([]); // 全量清空（空列表 = 只清理不绘制）
 

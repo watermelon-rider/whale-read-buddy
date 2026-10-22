@@ -98,7 +98,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
   initHighlightListeners();
 
   const host = document.createElement('div');
-  host.id = 'deepreader-annotate-host';
+  host.id = 'whalereader-annotate-host';
   host.style.cssText = HOST_CSS + 'display:none;';
   const shadow = host.attachShadow({ mode: 'open' });
   const style = document.createElement('style');
@@ -255,7 +255,7 @@ export function mountAnnotationFlow(handlers: PageAnnotationHandlers): void {
   });
 
   // 点击已有高亮/编号标记 → 编辑模式。
-  document.addEventListener('deepreader:edit-annotation', (e) => {
+  document.addEventListener('whalereader:edit-annotation', (e) => {
     const quote = (e as CustomEvent<{ quote: string }>).detail.quote;
     const rect = rectOfQuote(quote);
     if (!rect) return;

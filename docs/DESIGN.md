@@ -1,4 +1,4 @@
-# DeepReader 设计文档
+# 大肥鱼陪读（WhaleRead Buddy）设计文档
 
 > 陪读型 Chrome 扩展：读取当前页面（HTML / PDF），基于 DeepSeek API 与用户就页面内容对话，
 > 支持划词批注、主动搜索补充信息。

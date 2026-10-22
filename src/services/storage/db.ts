@@ -29,7 +29,7 @@ export interface ConversationInstruction {
   text: string;
 }
 
-export const db = new Dexie('deepreader') as Dexie & {
+export const db = new Dexie('whale-read-buddy') as Dexie & {
   conversations: EntityTable<ConversationMeta, 'id'>;
   events: EntityTable<StoredEvent, 'id'>;
   drafts: EntityTable<Draft, 'conversationId'>;
