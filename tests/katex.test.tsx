@@ -4,7 +4,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AssistantContent } from '../src/ui/chat/MessageBubble';
-import { writeFileSync } from 'fs';
 
 const RAW = `先把工具摆上，你就明白我问的是什么了：
 
@@ -30,13 +29,5 @@ describe('katex', () => {
     expect(html).not.toContain('$$');
     // katex 渲染必须保留内联样式（strut/vlist 布局依赖）
     expect((html.match(/style=/g) || []).length).toBeGreaterThan(10);
-  });
-
-  it('落地一份可视验证页（真实管道 + 打包 CSS 用）', () => {
-    const html = renderToStaticMarkup(<AssistantContent content={RAW} />);
-    writeFileSync(
-      `${__dirname}/../scratchpad/katex-repro4.html`,
-      `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="./bundled.css"></head><body><div class="dr-md">${html}</div></body></html>`,
-    );
   });
 });
