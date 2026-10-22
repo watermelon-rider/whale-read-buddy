@@ -244,6 +244,12 @@
   right: 0;
 }
 
+/* 上方空间不足时向下弹 */
+.dr-anno-pop-down {
+  bottom: auto;
+  top: calc(100% + 6px);
+}
+
 .dr-anno-list {
   left: 0;
 }

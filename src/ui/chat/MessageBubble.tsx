@@ -25,6 +25,17 @@ function AnnotationChips({
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLSpanElement>(null);
+  // 弹出方向自适应：上方空间不足时向下弹，避免被面板顶部遮挡。
+  const [popDown, setPopDown] = useState(false);
+
+  const toggleOpen = () => {
+    if (!open && rootRef.current) {
+      const rect = rootRef.current.getBoundingClientRect();
+      // 浮层最大高约 250px（含间距），上方不够就向下。
+      setPopDown(rect.top < 260);
+    }
+    setOpen((v) => !v);
+  };
 
   // 失焦/点击外部/Esc 自动关闭列表浮层。
   useEffect(() => {
@@ -50,12 +61,12 @@ function AnnotationChips({
 
   return (
     <span className="dr-anno-chips" ref={rootRef}>
-      <button className="dr-chip dr-chip-bordered" onClick={() => setOpen((v) => !v)}>
+      <button className="dr-chip dr-chip-bordered" onClick={toggleOpen}>
         <MessageSquareQuote size={13} strokeWidth={1.8} />
         批注 ×{annotations.length}
       </button>
       {open && (
-        <div className="dr-anno-pop">
+        <div className={`dr-anno-pop${popDown ? ' dr-anno-pop-down' : ''}`}>
           {annotations.map((a) => (
             <button
               key={a.index}
