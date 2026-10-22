@@ -5,6 +5,12 @@
 import { AgentLoop } from '../core/agent/loop';
 import { streamChat } from '../core/llm/deepseek';
 import { composeUserText, Session } from '../core/session/session';
+import {
+  contextWindowOf,
+  DEFAULT_POLICY,
+  estimateTokens,
+  maybeCompact,
+} from '../core/session/compaction';
 import type { SessionEvent } from '../core/session/events';
 import { assembleSystemPrompt } from '../core/prompt/system';
 import { formatSearchResult, mergeSearchResults } from '../core/web/format';
@@ -255,6 +261,28 @@ export class ConversationManager {
 
   cancelTurn(conversationId: string): void {
     this.live.get(conversationId)?.loop?.cancel();
+  }
+
+  /** 上下文用量（进度环）：当前投影 token 估值 / 窗口大小 / 是否已压缩过。 */
+  async getContextUsage(conversationId: string): Promise<{
+    tokens: number;
+    window: number;
+    ratio: number;
+    compacted: boolean;
+  }> {
+    const live = await this.ensureLive(conversationId);
+    const settings = await loadSettings();
+    const tokens = estimateTokens(live.session.deriveMessages());
+    const window = contextWindowOf(settings.model);
+    const compacted = live.session.snapshot().some((e) => e.type === 'compaction/summary');
+    return { tokens, window, ratio: tokens / window, compacted };
+  }
+
+  /** 手动触发压缩（不管阈值，测试压缩机制用）。 */
+  async compactConversation(conversationId: string): Promise<boolean> {
+    const live = await this.ensureLive(conversationId);
+    const settings = await loadSettings();
+    return maybeCompact(live.session, settings, undefined, DEFAULT_POLICY, true);
   }
 
   /** ask_user 的回答回流。 */

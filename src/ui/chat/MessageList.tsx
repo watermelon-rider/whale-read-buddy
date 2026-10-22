@@ -64,6 +64,7 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
             id: `evt-${e.seq}`,
             role: 'user',
             text: e.data.text,
+            at: e.at,
             ...(e.data.annotations ? { annotations: e.data.annotations } : {}),
           },
         });
@@ -76,6 +77,7 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
             id: `evt-${e.seq}`,
             role: 'assistant',
             text: e.data.content,
+            at: e.at,
             ...(e.data.reasoning ? { reasoning: e.data.reasoning } : {}),
           ...(e.data.reasoningMs ? { reasoningMs: e.data.reasoningMs } : {}),
             ...(lastAnnotations ? { replyAnnotations: lastAnnotations } : {}),

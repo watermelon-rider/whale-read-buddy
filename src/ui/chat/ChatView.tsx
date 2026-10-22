@@ -12,6 +12,7 @@ import type { PanelSnapshot } from '../../types/protocol';
 import { connectPanelEvents, request } from '../shared/backend';
 import { AskUserCard } from './AskUserCard';
 import { Composer, type ModelChoice } from './Composer';
+import type { ContextUsage } from './ContextRing';
 import { MessageList } from './MessageList';
 
 interface Props {
@@ -47,8 +48,15 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
   });
   const [askUser, setAskUser] = useState<{ requestId: string; questions: AskUserQuestion[] } | null>(null);
   const [title, setTitle] = useState(conversation.title);
+  const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
   const conversationIdRef = useRef(conversation.id);
   conversationIdRef.current = conversation.id;
+
+  const refreshContextUsage = useCallback(() => {
+    void request<ContextUsage>({ kind: 'getContextUsage', conversationId: conversationIdRef.current })
+      .then(setContextUsage)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => setTitle(conversation.title), [conversation.title]);
 
@@ -113,7 +121,10 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
             ...(event.error ? { error: event.error } : {}),
           });
           if (event.state === 'running') setStreaming({ reasoning: '', content: '' });
-          if (event.state === 'idle') setStreaming(null);
+          if (event.state === 'idle') {
+            setStreaming(null);
+            refreshContextUsage();
+          }
           break;
         case 'askUser':
           if (event.conversationId !== conversationIdRef.current) return;
@@ -131,7 +142,10 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
           break;
       }
     });
-  }, []);
+  }, [refreshContextUsage]);
+
+  // 初次挂载拉一次用量。
+  useEffect(() => refreshContextUsage(), [refreshContextUsage, conversation.id]);
 
   const addAnnotation = useCallback(
     (quote: string, note: string, messageId: string) => {
@@ -226,6 +240,12 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
         annotations={annotations}
         running={turn.running}
         modelChoice={modelChoice}
+        contextUsage={contextUsage}
+        onCompact={() =>
+          void request({ kind: 'compactNow', conversationId: conversation.id }).then(
+            refreshContextUsage,
+          )
+        }
         onQuestionChange={setQuestion}
         onAnnotationsChange={setAnnotations}
         onModelChoiceChange={(c) => void handleModelChoiceChange(c)}

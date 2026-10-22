@@ -80,6 +80,80 @@
   margin-bottom: 6px;
 }
 
+/* 悬浮元信息行：常驻占位不抖动，悬浮才可见 */
+.dr-msg-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  margin-top: 2px;
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+  pointer-events: none;
+}
+
+.dr-msg:hover .dr-msg-meta {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dr-msg-user .dr-msg-meta {
+  justify-content: flex-end;
+}
+
+.dr-msg-time {
+  font-size: 11px;
+  color: var(--dr-text-secondary);
+}
+
+.dr-copy-btn {
+  padding: 2px 4px;
+}
+
+/* 上下文进度环 */
+.dr-ring-anchor {
+  position: relative;
+}
+
+.dr-ring-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+}
+
+.dr-ring-btn:hover {
+  background: #efeff1;
+}
+
+.dr-ring-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  background: #fff;
+  border: 1px solid var(--dr-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  padding: 10px 12px;
+  width: min(260px, calc(100vw - 40px));
+}
+
+.dr-ring-pop-text {
+  font-size: 12px;
+  color: var(--dr-text);
+  margin-bottom: 6px;
+}
+
+.dr-ring-pop-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
 .dr-msg-user {
   margin-top: 10px;
 }

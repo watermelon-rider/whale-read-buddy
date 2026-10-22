@@ -13,6 +13,8 @@ export type PanelRequest =
   | { kind: 'newConversation'; url: string }
   | { kind: 'sendMessage'; conversationId: string; question: string; annotations: AnnotationItem[]; thinkingEnabled: boolean }
   | { kind: 'cancelTurn'; conversationId: string }
+  | { kind: 'getContextUsage'; conversationId: string }
+  | { kind: 'compactNow'; conversationId: string }
   | { kind: 'listConversations'; origin?: string }
   | { kind: 'deleteConversation'; conversationId: string }
   | { kind: 'renameConversation'; conversationId: string; title: string }

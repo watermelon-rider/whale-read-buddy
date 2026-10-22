@@ -55,8 +55,9 @@ export async function maybeCompact(
   settings: Pick<Settings, 'apiKey' | 'baseURL' | 'model'>,
   signal?: AbortSignal,
   policy: CompactionPolicy = DEFAULT_POLICY,
+  force = false,
 ): Promise<boolean> {
-  if (!shouldCompact(session, settings.model, policy)) return false;
+  if (!force && !shouldCompact(session, settings.model, policy)) return false;
 
   const messages = session.deriveMessages();
   // 保留尾部 retainRatio 对应的消息，之前的全部摘要。

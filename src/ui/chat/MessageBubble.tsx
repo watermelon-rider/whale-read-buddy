@@ -4,7 +4,7 @@
  * - 助手消息：Markdown 渲染；reasoning 折叠；Annotation N： 渲染为 hoverable chip。
  */
 import { Children, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { MessageSquareQuote } from 'lucide-react';
+import { Check, Copy, MessageSquareQuote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AnnotationItem } from '../../types';
@@ -193,6 +193,41 @@ export interface DisplayMessage {
   /** 最近一次携带批注的用户消息（供回复 chip 查找原文）。 */
   replyAnnotations?: AnnotationItem[];
   interrupted?: boolean;
+  /** 事件时间戳（毫秒）。 */
+  at?: number;
+}
+
+function formatTime(at: number): string {
+  const d = new Date(at);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const hm = d.toTimeString().slice(0, 5);
+  return sameDay ? hm : `${d.getMonth() + 1}/${d.getDate()} ${hm}`;
+}
+
+/** 悬浮显示的元信息行：时间 + 复制。 */
+function HoverMeta({ message }: { message: DisplayMessage }) {
+  const [copied, setCopied] = useState(false);
+  if (message.streaming || message.at === undefined) return null;
+  const copyText =
+    message.role === 'user' ? splitAnnotationProtocol(message.text).question : message.text;
+  return (
+    <div className="dr-msg-meta">
+      <span className="dr-msg-time">{formatTime(message.at)}</span>
+      <button
+        className="dr-icon-btn dr-copy-btn"
+        title="复制"
+        onClick={() => {
+          void navigator.clipboard.writeText(copyText).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1200);
+          });
+        }}
+      >
+        {copied ? <Check size={13} strokeWidth={2} /> : <Copy size={13} strokeWidth={1.8} />}
+      </button>
+    </div>
+  );
 }
 
 /** 思维链实况：单行字幕，永远只显示最后一行（旧行上推隐去，无滚动条）。 */
@@ -228,6 +263,7 @@ export function MessageBubble({
             <AnnotationChips annotations={message.annotations} onShowDetail={setDetail} />
           )}
         </div>
+        <HoverMeta message={message} />
         {detail && (
           <AnnoPopover
             rect={detail.rect}
@@ -260,6 +296,7 @@ export function MessageBubble({
         />
       </div>
       {message.interrupted && <div className="dr-interrupted">（已中断）</div>}
+      <HoverMeta message={message} />
       {detail && (
         <AnnoPopover
           rect={detail.rect}

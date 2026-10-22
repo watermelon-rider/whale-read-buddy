@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { ArrowUp, ChevronDown, MessageSquareQuote, Square, X } from 'lucide-react';
 import type { AnnotationItem, ModelId, Settings } from '../../types';
+import { ContextRing, type ContextUsage } from './ContextRing';
 
 export interface ModelChoice {
   model: ModelId;
@@ -31,6 +32,8 @@ interface Props {
   annotations: AnnotationItem[];
   running: boolean;
   modelChoice: ModelChoice;
+  contextUsage: ContextUsage | null;
+  onCompact: () => void;
   onQuestionChange: (q: string) => void;
   onAnnotationsChange: (items: AnnotationItem[]) => void;
   onModelChoiceChange: (choice: ModelChoice) => void;
@@ -192,7 +195,9 @@ export function Composer(props: Props) {
         onKeyDown={handleKeyDown}
       />
       <div className="dr-composer-footer">
-        <div className="dr-footer-left" />
+        <div className="dr-footer-left">
+          <ContextRing usage={props.contextUsage} onCompact={props.onCompact} />
+        </div>
         <div className="dr-footer-right">
           <div className="dr-model-anchor" ref={modelAnchorRef}>
             <button

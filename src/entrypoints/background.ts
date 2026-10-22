@@ -62,6 +62,7 @@ export default defineBackground(() => {
   const PANEL_REQUEST_KINDS = new Set([
     'openConversation', 'getLastConversation', 'newConversation', 'sendMessage', 'cancelTurn', 'listConversations',
     'deleteConversation', 'renameConversation', 'loadHistory', 'saveDraft', 'loadDraft', 'restoreHighlights',
+    'getContextUsage', 'compactNow',
     'getSettings', 'saveSettings', 'getConversationInstruction', 'saveConversationInstruction',
     'answerAskUser',
   ]);
@@ -108,6 +109,10 @@ export default defineBackground(() => {
       case 'cancelTurn':
         manager.cancelTurn(req.conversationId);
         return { ok: true };
+      case 'getContextUsage':
+        return manager.getContextUsage(req.conversationId);
+      case 'compactNow':
+        return { compacted: await manager.compactConversation(req.conversationId) };
       case 'listConversations':
         return req.origin ? listConversationsByOrigin(req.origin) : listAllConversations();
       case 'deleteConversation':
