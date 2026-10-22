@@ -10,17 +10,29 @@ interface Props {
 }
 
 export function AskUserCard({ questions, onSubmit }: Props) {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [picked, setPicked] = useState<Record<string, string>>({});
   const [custom, setCustom] = useState<Record<string, string>>({});
 
-  const allAnswered = questions.every((q) => (answers[q.id] ?? '').trim().length > 0);
+  const allPicked = questions.every((q) => (picked[q.id] ?? '').trim().length > 0);
+  const hasCustom = Object.values(custom).some((v) => v.trim().length > 0);
+  /** 提交按钮：还有没点选项的题、或输了文字时显示。 */
+  const showSubmit = !allPicked || hasCustom;
+
+  const merged = (): Record<string, string> => {
+    const out: Record<string, string> = { ...picked };
+    for (const [k, v] of Object.entries(custom)) {
+      if (v.trim().length > 0) out[k] = v;
+    }
+    return out;
+  };
 
   /** 点选项立即作答；全部问题都答完自动提交，不用再点按钮。 */
   const pick = (q: AskUserQuestion, label: string) => {
-    const next = { ...answers, [q.id]: label };
-    setAnswers(next);
-    if (questions.every((x) => (next[x.id] ?? '').trim().length > 0)) {
-      onSubmit(next);
+    const next = { ...picked, [q.id]: label };
+    setPicked(next);
+    // 全部点选完成且没有正在输入的文字 → 自动提交。
+    if (questions.every((x) => (next[x.id] ?? '').trim().length > 0) && !hasCustom) {
+      onSubmit({ ...next, ...Object.fromEntries(Object.entries(custom).filter(([, v]) => v.trim())) });
     }
   };
 
@@ -37,7 +49,7 @@ export function AskUserCard({ questions, onSubmit }: Props) {
             {q.options.map((opt, i) => (
               <button
                 key={opt.label}
-                className={`dr-ask-option${answers[q.id] === opt.label ? ' selected' : ''}`}
+                className={`dr-ask-option${picked[q.id] === opt.label ? ' selected' : ''}`}
                 title={opt.description}
                 onClick={() => pick(q, opt.label)}
               >
@@ -53,15 +65,14 @@ export function AskUserCard({ questions, onSubmit }: Props) {
             onChange={(e) => {
               const v = e.target.value;
               setCustom((prev) => ({ ...prev, [q.id]: v }));
-              if (v.trim().length > 0) setAnswers((prev) => ({ ...prev, [q.id]: v }));
             }}
           />
         </div>
       ))}
       {/* 纯选项作答会自动提交；只有文字输入需要点提交 */}
-      {!allAnswered && (
+      {showSubmit && (
         <div className="dr-ask-submit-row">
-          <button className="dr-primary-btn dr-ask-submit" onClick={() => onSubmit(answers)}>
+          <button className="dr-primary-btn dr-ask-submit" onClick={() => onSubmit(merged())}>
             提交回答
           </button>
         </div>
