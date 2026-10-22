@@ -3,7 +3,7 @@
  * 页面注入/工具调用/压缩渲染为 12px 状态行（与思维链同字号，lucide 图标）。
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, FileText, Shrink, Wrench, type LucideIcon } from 'lucide-react';
+import { ArrowDown, Clock, FileText, Shrink, Wrench, type LucideIcon } from 'lucide-react';
 import type { SessionEvent } from '../../core/session/events';
 import type { AnnotationItem } from '../../types';
 import { MessageBubble, type DisplayMessage } from './MessageBubble';
@@ -80,6 +80,18 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
         break;
       }
       case 'assistant/message':
+        // 空内容且只有工具调用的中间步骤：不渲染空气泡，仅留思考耗时行。
+        if (e.data.content.trim().length === 0) {
+          if (e.data.reasoningMs !== undefined) {
+            items.push({
+              kind: 'status',
+              id: `evt-${e.seq}`,
+              icon: Clock,
+              text: t('thoughtSeconds', { s: (e.data.reasoningMs / 1000).toFixed(1) }),
+            });
+          }
+          break;
+        }
         items.push({
           kind: 'message',
           message: {
@@ -111,7 +123,11 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
             ? t('statusToolFail', { name: e.data.name })
             : e.data.name === 'ask_user'
               ? `${t('statusAskDone')}${e.data.displayNote ? `（${e.data.displayNote}）` : ''}`
-              : t('statusToolDone', { name: e.data.name }),
+              : e.data.name === 'web_search'
+                ? t('statusSearchDone')
+                : e.data.name === 'web_fetch'
+                  ? t('statusFetchDone')
+                  : t('statusToolDone', { name: e.data.name }),
         });
         break;
       case 'compaction/summary':
