@@ -8,7 +8,7 @@
 
 ## 这是什么
 
-一个 Chrome / Arc 扩展（MV3）。打开任意网页或 PDF，点一下工具栏图标，大肥鱼就出现在侧边栏里 —— 她已经读完了你正在看的页面，可以直接开聊。底层是 DeepSeek API（`deepseek-flash` / `deepseek-v4-pro`，1M 上下文，思考模式可选强度）。
+一个 Chrome 扩展（MV3）。打开任意网页或 PDF，点一下工具栏图标，大肥鱼就出现在侧边栏里 —— 她已经读完了你正在看的页面，可以直接开聊。底层是 DeepSeek API（`deepseek-flash` / `deepseek-v4-pro`，1M 上下文，思考模式可选强度）。
 
 ## 功能
 
@@ -55,8 +55,6 @@ pnpm compile    # 类型检查
 
 技术栈：WXT + React + TypeScript + Dexie（IndexedDB）。架构与设计决策见 [docs/DESIGN.md](docs/DESIGN.md)。
 
-## 浏览器兼容
+## 浏览器支持
 
-- Chrome / Edge：完整支持（Side Panel 形态）。
-- Arc：不支持 `chrome.sidePanel` 的版本自动降级为弹出窗口，功能一致。
-- Firefox：未适配（MV3 sidePanel 差异），欢迎 PR。
+仅支持 Chrome（MV3，Side Panel 形态）。其他浏览器未适配。

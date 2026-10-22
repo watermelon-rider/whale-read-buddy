@@ -8,7 +8,7 @@
 
 ## What is this
 
-A Chrome / Arc extension (MV3). Open any web page or PDF, click the toolbar icon, and WhaleBuddy appears in the side panel — she has already read the page you're on, so you can start chatting right away. Powered by the DeepSeek API (`deepseek-flash` / `deepseek-v4-pro`, 1M context, thinking mode with adjustable effort).
+A Chrome extension (MV3). Open any web page or PDF, click the toolbar icon, and WhaleBuddy appears in the side panel — she has already read the page you're on, so you can start chatting right away. Powered by the DeepSeek API (`deepseek-flash` / `deepseek-v4-pro`, 1M context, thinking mode with adjustable effort).
 
 ## Features
 
@@ -57,6 +57,4 @@ Stack: WXT + React + TypeScript + Dexie (IndexedDB). Architecture & design decis
 
 ## Browser support
 
-- Chrome / Edge: fully supported (side panel).
-- Arc: falls back to a popup window when `chrome.sidePanel` is unavailable; same features.
-- Firefox: not adapted yet (MV3 sidePanel differences) — PRs welcome.
+Chrome only (MV3, side panel). Other browsers are not supported.
