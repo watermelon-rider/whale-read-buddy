@@ -102,10 +102,13 @@ export function AssistantContent({
   content,
   replyAnnotations,
   onShowDetail = () => {},
+  streaming = false,
 }: {
   content: string;
   replyAnnotations?: AnnotationItem[];
   onShowDetail?: (d: AnnoDetail) => void;
+  /** 流式进行中：mermaid 等块延后到流结束再渲染（半成品代码解析会报错刷屏）。 */
+  streaming?: boolean;
 }) {
   const components = useMemo(() => {
     /** 文本片段内的 Annotation chip 替换。 */
@@ -177,10 +180,10 @@ export function AssistantContent({
       h3: wrap('h3'),
       blockquote: CalloutBlockquote,
       table: SortableTable,
-      pre: PreBlock,
+      pre: (props: { children?: ReactNode }) => <PreBlock {...props} streaming={streaming} />,
       code: CodeInline,
     };
-  }, [replyAnnotations, onShowDetail]);
+  }, [replyAnnotations, onShowDetail, streaming]);
 
   return (
     <ReactMarkdown
@@ -200,15 +203,19 @@ function CodeInline({ className, children }: { className?: string; children?: Re
   return <code className={className}>{children}</code>;
 }
 
-/** pre 覆写：mermaid / steps / timeline 围栏走自定义渲染，其余保持默认。 */
-function PreBlock({ children }: { children?: ReactNode }) {
+/** pre 覆写：mermaid / steps / timeline / 块级公式走自定义渲染，其余保持默认。 */
+function PreBlock({ children, streaming }: { children?: ReactNode; streaming?: boolean }) {
   const child = Children.toArray(children)[0];
   if (isValidElement(child)) {
     const props = child.props as { className?: string; children?: ReactNode };
     const lang = props.className?.match(/language-(\w+)/)?.[1];
     const code = textOf(props.children);
     if (props.className?.includes('math-display')) return <MathBlock tex={code} />;
-    if (lang === 'mermaid') return <Mermaid code={code} />;
+    if (lang === 'mermaid') {
+      // 流式中途的半成品围栏不送解析（会报几十个语法错误），显示占位。
+      if (streaming) return <div className="dr-mermaid-pending">图表生成中…</div>;
+      return <Mermaid code={code} />;
+    }
     if (lang === 'steps') return <Steps code={code} />;
     if (lang === 'timeline') return <Timeline code={code} />;
   }
@@ -334,6 +341,7 @@ export function MessageBubble({
           content={message.text}
           replyAnnotations={message.replyAnnotations}
           onShowDetail={setDetail}
+          streaming={message.streaming}
         />
       </div>
       {message.interrupted && <div className="dr-interrupted">（已中断）</div>}
