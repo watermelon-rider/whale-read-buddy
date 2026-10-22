@@ -157,7 +157,7 @@ export async function dispatchToolCall(
   name: string,
   argumentsJson: string,
   ctx: ToolExecutionContext,
-): Promise<{ content: string; isError: boolean }> {
+): Promise<{ content: string; isError: boolean; displayNote?: string }> {
   let args: unknown;
   try {
     args = JSON.parse(argumentsJson || '{}');
@@ -170,8 +170,15 @@ export async function dispatchToolCall(
         return { content: await executor.webSearch(validateQueries(args), ctx), isError: false };
       case 'web_fetch':
         return { content: await executor.webFetch(validateUrl(args), ctx), isError: false };
-      case 'ask_user':
-        return { content: await executor.askUser(validateQuestions(args), ctx), isError: false };
+      case 'ask_user': {
+        const questions = validateQuestions(args);
+        const content = await executor.askUser(questions, ctx);
+        // 从结果文本提取用户答案用于状态行展示。
+        const answers = [...content.matchAll(/回答：(.+)/g)].map((m) => m[1]?.trim() ?? '');
+        const displayNote =
+          answers.length > 0 ? `你回答了：${answers.join('、')}` : undefined;
+        return { content, isError: false, ...(displayNote ? { displayNote } : {}) };
+      }
       default:
         return { content: `Error: unknown tool ${name}`, isError: true };
     }

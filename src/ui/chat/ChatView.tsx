@@ -226,6 +226,7 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
           {turn.toolNames ? `大肥鱼翻书中（${turn.toolNames.join('、')}）…` : '大肥鱼干饭中…'}
         </div>
       )}
+      {compacting && <div className="dr-status">大肥鱼正在压缩对话…</div>}
       {turn.error && <div className="dr-error">{turn.error}</div>}
       {askUser && (
         <AskUserCard

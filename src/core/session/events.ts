@@ -43,7 +43,14 @@ export interface SessionEventMap {
   /** 失败/取消的尝试；不进模型历史。 */
   'assistant/attempt': { error: string };
   /** 工具结果（tool/call 合并进 assistant/message.toolCalls，这里只记结果）。 */
-  'tool/result': { toolCallId: string; name: string; content: string; isError?: boolean };
+  'tool/result': {
+    toolCallId: string;
+    name: string;
+    content: string;
+    isError?: boolean;
+    /** 状态行自定义展示文本（如 ask_user 的用户答案摘要）。 */
+    displayNote?: string;
+  };
   /** 压缩摘要节点；遮蔽 [0, coversSeq] 区间的模型可见事件。 */
   'compaction/summary': { coversSeq: number; text: string };
 }

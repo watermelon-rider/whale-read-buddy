@@ -104,6 +104,7 @@ export class AgentLoop {
             name: call.name,
             content: outcome.content,
             isError: outcome.isError || undefined,
+            ...(outcome.displayNote ? { displayNote: outcome.displayNote } : {}),
           });
           if (signal.aborted) return {};
         }

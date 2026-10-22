@@ -101,7 +101,7 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           text: e.data.isError
             ? `大肥鱼想用 ${e.data.name}，但没成功`
             : e.data.name === 'ask_user'
-              ? '大肥鱼点点头'
+              ? `大肥鱼点点头${e.data.displayNote ? `（${e.data.displayNote}）` : ''}`
               : `大肥鱼用 ${e.data.name} 查完啦`,
         });
         break;
@@ -110,7 +110,7 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           kind: 'status',
           id: `evt-${e.seq}`,
           icon: Shrink,
-          text: '大肥鱼消化了早前的聊天（已压缩成摘要）',
+          text: '大肥鱼消化了早前的对话',
         });
         break;
       default:
