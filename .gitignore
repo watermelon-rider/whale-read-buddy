@@ -1,6 +1,7 @@
 node_modules/
 .output/
 .wxt/
+.codegraph/
 *.zip
 dist/
 scratchpad/
