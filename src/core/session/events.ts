@@ -3,6 +3,7 @@
  * 会话是一条 append-only 的类型化事件日志；模型可见即已记录。
  */
 import type { AnnotationItem, ModelId, PageContent } from '../../types';
+import type { AskUserQuestion } from '../agent/tools';
 
 /** 工具调用的模型侧参数（OpenAI tool_calls 格式）。 */
 export interface ToolCall {
@@ -53,6 +54,8 @@ export interface SessionEventMap {
   };
   /** 压缩摘要节点；遮蔽 [0, coversSeq] 区间的模型可见事件。 */
   'compaction/summary': { coversSeq: number; text: string };
+  /** ask_user 提问（仅 UI 用）：用于重开后恢复未回答的提问卡片。不进模型历史。 */
+  'ask/pending': { toolCallId: string; questions: AskUserQuestion[] };
 }
 
 export type SessionEventType = keyof SessionEventMap;

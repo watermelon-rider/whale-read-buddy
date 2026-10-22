@@ -9,6 +9,8 @@ import type { AnnotationItem } from '../../types';
 import { MessageBubble, type DisplayMessage } from './MessageBubble';
 import { SelectionAnnotator } from './SelectionAnnotator';
 import { AnnoPopover } from '../shared/AnnoPopover';
+import { AskUserCard } from './AskUserCard';
+import type { AskUserQuestion } from '../../core/agent/tools';
 
 interface Props {
   conversationId: string;
@@ -22,6 +24,11 @@ interface Props {
   onAnnotateSelection: (quote: string, note: string, messageId: string) => void;
   /** 草稿批注（对话内批注在消息里画引用高亮与角标）。 */
   draftAnnotations?: AnnotationItem[];
+  /** 当前回合进行中的 ask_user（实时回答走 answerAskUser 通道）。 */
+  liveAsk?: { requestId: string; questions: AskUserQuestion[] } | null;
+  onAnswerAsk?: (requestId: string, answers: Record<string, string>) => void;
+  /** 补答历史遗留提问（原回合已结束，补答会开启新一轮对话）。 */
+  onAnswerPendingAsk?: (toolCallId: string, answers: Record<string, string>) => void;
 }
 
 /** 每个会话记住滚动位置：切视图/重开面板都直接定位，不播回底动画。
@@ -48,7 +55,8 @@ async function readPersistedScroll(conversationId: string): Promise<number | und
 
 type DisplayItem =
   | { kind: 'message'; message: DisplayMessage }
-  | { kind: 'status'; id: string; icon: LucideIcon; text: string };
+  | { kind: 'status'; id: string; icon: LucideIcon; text: string }
+  | { kind: 'ask'; id: string; toolCallId: string; questions: AskUserQuestion[] };
 
 /** 把事件日志投影为 UI 展示项。 */
 function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
@@ -113,6 +121,21 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           text: '大肥鱼消化了早前的对话',
         });
         break;
+      case 'ask/pending': {
+        // 已有对应 tool/result 的提问是历史已答卡片，不重复展示。
+        const answered = events.some(
+          (x) => x.type === 'tool/result' && x.data.toolCallId === e.data.toolCallId,
+        );
+        if (!answered) {
+          items.push({
+            kind: 'ask',
+            id: `evt-${e.seq}`,
+            toolCallId: e.data.toolCallId,
+            questions: e.data.questions,
+          });
+        }
+        break;
+      }
       default:
         break;
     }
@@ -126,6 +149,9 @@ export function MessageList({
   streaming,
   onAnnotateSelection,
   draftAnnotations,
+  liveAsk,
+  onAnswerAsk,
+  onAnswerPendingAsk,
 }: Props) {
   const items = useMemo(() => toDisplayItems(events), [events]);
   const listRef = useRef<HTMLDivElement>(null);
@@ -260,11 +286,26 @@ export function MessageList({
                 <item.icon size={13} strokeWidth={1.8} />
                 <span>{item.text}</span>
               </div>
+            ) : item.kind === 'ask' ? (
+              // 与当前回合实时提问去重：实时卡片在列表底部统一渲染。
+              liveAsk && JSON.stringify(liveAsk.questions) === JSON.stringify(item.questions) ? null : (
+                <AskUserCard
+                  key={item.id}
+                  questions={item.questions}
+                  onSubmit={(answers) => onAnswerPendingAsk?.(item.toolCallId, answers)}
+                />
+              )
             ) : (
               <div key={item.message.id} data-message-id={item.message.id}>
                 <MessageBubble message={item.message} />
               </div>
             ),
+          )}
+          {liveAsk && onAnswerAsk && (
+            <AskUserCard
+              questions={liveAsk.questions}
+              onSubmit={(answers) => onAnswerAsk(liveAsk.requestId, answers)}
+            />
           )}
           {streaming && (
             <MessageBubble

@@ -10,7 +10,6 @@ import type { StreamDelta } from '../../core/llm/stream';
 import type { AnnotationItem, ConversationMeta, Settings } from '../../types';
 import type { PanelSnapshot } from '../../types/protocol';
 import { connectPanelEvents, request } from '../shared/backend';
-import { AskUserCard } from './AskUserCard';
 import { Composer, type ModelChoice } from './Composer';
 import type { ContextUsage } from './ContextRing';
 import { MessageList } from './MessageList';
@@ -220,6 +219,14 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
         streaming={streaming}
         onAnnotateSelection={addAnnotation}
         draftAnnotations={annotations}
+        liveAsk={askUser}
+        onAnswerAsk={(requestId, answers) => {
+          void request({ kind: 'answerAskUser', requestId, answers });
+          setAskUser(null);
+        }}
+        onAnswerPendingAsk={(toolCallId, answers) =>
+          void request({ kind: 'answerPendingAsk', conversationId: conversation.id, toolCallId, answers })
+        }
       />
       {turn.running && (
         <div className="dr-status">
@@ -232,15 +239,6 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
       )}
       {compacting && <div className="dr-status">大肥鱼正在压缩对话…</div>}
       {turn.error && <div className="dr-error">{turn.error}</div>}
-      {askUser && (
-        <AskUserCard
-          questions={askUser.questions}
-          onSubmit={(answers) => {
-            void request({ kind: 'answerAskUser', requestId: askUser.requestId, answers });
-            setAskUser(null);
-          }}
-        />
-      )}
       <Composer
         question={question}
         annotations={annotations}

@@ -293,6 +293,44 @@ export class ConversationManager {
     pending.resolve(answers);
   }
 
+  /**
+   * 补答历史遗留提问：原回合早已结束，这里把回答落为 tool/result（保持历史连贯），
+   * 再以用户消息形式补答并开启新一轮对话，模型借此恢复上下文。
+   */
+  async answerPendingAsk(
+    conversationId: string,
+    tabId: number,
+    pageUrl: string,
+    toolCallId: string,
+    answers: Record<string, string>,
+  ): Promise<void> {
+    const live = await this.ensureLive(conversationId);
+    const pending = live.session
+      .snapshot()
+      .find((e) => e.type === 'ask/pending' && e.data.toolCallId === toolCallId);
+    const questions = pending?.type === 'ask/pending' ? pending.data.questions : [];
+
+    const resultLines = questions.map(
+      (q) => `- ${q.question}\n  回答：${answers[q.id] ?? '（未回答）'}`,
+    );
+    const answersText = questions
+      .map((q) => answers[q.id] ?? '')
+      .filter((s) => s.length > 0)
+      .join('、');
+    live.session.append('tool/result', {
+      toolCallId,
+      name: 'ask_user',
+      content: `用户的回答：\n${resultLines.join('\n')}`,
+      ...(answersText ? { displayNote: `你补答了：${answersText}` } : {}),
+    });
+
+    const text = [
+      '我之前没来得及回答你的提问，现在补答：',
+      ...questions.map((q) => `Q：${q.question}\nA：${answers[q.id] ?? '（跳过）'}`),
+    ].join('\n');
+    await this.sendMessage(conversationId, tabId, pageUrl, text, [], live.thinkingEnabled);
+  }
+
   private buildLoop(live: LiveConversation, settings: Settings): AgentLoop {
     const conversationId = live.meta.id;
     const executor = this.buildExecutor(settings, conversationId);

@@ -64,7 +64,7 @@ export default defineBackground(() => {
     'deleteConversation', 'renameConversation', 'loadHistory', 'saveDraft', 'loadDraft', 'restoreHighlights',
     'getContextUsage', 'compactNow',
     'getSettings', 'saveSettings', 'getConversationInstruction', 'saveConversationInstruction',
-    'answerAskUser',
+    'answerAskUser', 'answerPendingAsk',
   ]);
 
   chrome.runtime.onMessage.addListener((raw: PanelRequest, sender, sendResponse) => {
@@ -163,6 +163,19 @@ export default defineBackground(() => {
       case 'answerAskUser':
         manager.answerAskUser(req.requestId, req.answers);
         return { ok: true };
+      case 'answerPendingAsk': {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id || !tab.url) throw new Error('无法定位当前标签页');
+        await manager.refreshSystemPrompt(req.conversationId);
+        await manager.answerPendingAsk(
+          req.conversationId,
+          tab.id,
+          tab.url,
+          req.toolCallId,
+          req.answers,
+        );
+        return { ok: true };
+      }
       default:
         throw new Error(`未知请求：${JSON.stringify(req)}`);
     }

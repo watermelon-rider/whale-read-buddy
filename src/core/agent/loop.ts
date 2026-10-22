@@ -8,7 +8,7 @@ import type { Settings } from '../../types';
 import { streamChat, type ChatResult } from '../llm/deepseek';
 import type { StreamDelta } from '../llm/stream';
 import type { Session } from '../session/session';
-import { dispatchToolCall, TOOL_SCHEMAS, type ToolExecutor } from './tools';
+import { dispatchToolCall, TOOL_SCHEMAS, validateQuestions, type ToolExecutor } from './tools';
 import { maybeCompact } from '../session/compaction';
 import { buildTimeContext, TIME_CONTEXT_MIN_INTERVAL_MS } from '../prompt/system';
 
@@ -95,6 +95,17 @@ export class AgentLoop {
 
         // 执行工具并追加结果（串行；类型上保留并行口子）。
         for (const call of result.toolCalls) {
+          // ask_user 提问先落一条 UI 日志：回合中断/面板关闭后提问卡片可恢复。
+          if (call.name === 'ask_user') {
+            try {
+              session.append('ask/pending', {
+                toolCallId: call.id,
+                questions: validateQuestions(JSON.parse(call.argumentsJson || '{}')),
+              });
+            } catch {
+              // 参数非法时 dispatchToolCall 会返回校验错误，不记录 pending。
+            }
+          }
           const outcome = await dispatchToolCall(this.deps.executor, call.name, call.argumentsJson, {
             signal,
             originalQuestion: input.question,
