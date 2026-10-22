@@ -354,6 +354,90 @@
 
 .dr-mermaid svg {
   max-width: 100%;
+  font-family: inherit;
+}
+
+/* Mermaid 扁平化 + 按形状组织配色（CSS 接管 SVG，盖过主题的 presentation 属性） */
+.dr-mermaid svg * {
+  filter: none !important; /* 剥掉默认投影 */
+}
+
+/* 矩形节点（步骤/过程）：品牌蓝 */
+.dr-mermaid .node rect,
+.dr-mermaid .node .basic.label-container {
+  fill: #e8f0fe !important;
+  stroke: #4e75df !important;
+  rx: 6px;
+}
+
+/* 菱形节点（判断/分支）：琥珀 */
+.dr-mermaid .node polygon {
+  fill: #fef3e2 !important;
+  stroke: #e8710a !important;
+}
+
+/* 圆/椭圆节点（起止/状态）：绿 */
+.dr-mermaid .node circle,
+.dr-mermaid .node ellipse {
+  fill: #e6f4ea !important;
+  stroke: #16a34a !important;
+}
+
+/* 节点文字 */
+.dr-mermaid .nodeLabel,
+.dr-mermaid .node text {
+  fill: #1f2329 !important;
+  color: #1f2329 !important;
+}
+
+/* 连线与箭头：统一中性灰 */
+.dr-mermaid .flowchart-link,
+.dr-mermaid .edgePath path {
+  stroke: #9aa0a6 !important;
+}
+
+.dr-mermaid marker path {
+  fill: #9aa0a6 !important;
+  stroke: #9aa0a6 !important;
+}
+
+/* 边标签 */
+.dr-mermaid .edgeLabel,
+.dr-mermaid .edgeLabel rect {
+  background: #fff !important;
+  fill: #fff !important;
+}
+
+.dr-mermaid .edgeLabel .label,
+.dr-mermaid .edgeLabel text,
+.dr-mermaid .edgeLabel foreignObject div {
+  color: #6b7280 !important;
+  background: #fff !important;
+}
+
+/* 时序图：参与者蓝、生命线灰、便签琥珀 */
+.dr-mermaid rect.actor {
+  fill: #e8f0fe !important;
+  stroke: #4e75df !important;
+  rx: 6px;
+}
+
+.dr-mermaid text.actor {
+  fill: #1f2329 !important;
+}
+
+.dr-mermaid .actor-line {
+  stroke: #d1d5db !important;
+}
+
+.dr-mermaid .messageLine0,
+.dr-mermaid .messageLine1 {
+  stroke: #6b7280 !important;
+}
+
+.dr-mermaid .note {
+  fill: #fef3e2 !important;
+  stroke: #e8710a !important;
 }
 
 /* 可排序表头 */
