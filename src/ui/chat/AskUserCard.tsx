@@ -60,9 +60,11 @@ export function AskUserCard({ questions, onSubmit }: Props) {
       ))}
       {/* 纯选项作答会自动提交；只有文字输入需要点提交 */}
       {!allAnswered && (
-        <button className="dr-primary-btn dr-ask-submit" onClick={() => onSubmit(answers)}>
-          提交回答
-        </button>
+        <div className="dr-ask-submit-row">
+          <button className="dr-primary-btn dr-ask-submit" onClick={() => onSubmit(answers)}>
+            提交回答
+          </button>
+        </div>
       )}
     </div>
   );

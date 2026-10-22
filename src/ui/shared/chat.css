@@ -222,6 +222,150 @@
   margin: 12px 0;
 }
 
+/* callout 提示卡（> [!NOTE] 语法） */
+.dr-callout {
+  border: 1px solid var(--dr-border);
+  border-left: 3px solid var(--dr-accent);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  background: var(--dr-bg-subtle);
+}
+
+.dr-callout-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dr-accent);
+  margin-bottom: 4px;
+}
+
+.dr-callout-tip {
+  border-left-color: #16a34a;
+}
+.dr-callout-tip .dr-callout-head {
+  color: #16a34a;
+}
+.dr-callout-important {
+  border-left-color: #7c3aed;
+}
+.dr-callout-important .dr-callout-head {
+  color: #7c3aed;
+}
+.dr-callout-warning {
+  border-left-color: #e8710a;
+}
+.dr-callout-warning .dr-callout-head {
+  color: #e8710a;
+}
+
+.dr-callout-body p {
+  margin: 0;
+}
+
+/* steps 步骤条 */
+.dr-steps {
+  margin: 8px 0;
+  border: 1px solid var(--dr-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.dr-step {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.dr-step + .dr-step {
+  border-top: 1px dashed var(--dr-border);
+}
+
+.dr-step-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--dr-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  margin-top: 2px;
+}
+
+.dr-step-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.dr-step-desc {
+  font-size: 12px;
+  color: var(--dr-text-secondary);
+}
+
+/* timeline 时间线 */
+.dr-timeline {
+  margin: 8px 0;
+  padding-left: 4px;
+}
+
+.dr-timeline-item {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 4px 0 4px 14px;
+  border-left: 2px solid var(--dr-border);
+  position: relative;
+}
+
+.dr-timeline-dot {
+  position: absolute;
+  left: -5px;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dr-accent);
+}
+
+.dr-timeline-time {
+  font-size: 12px;
+  color: var(--dr-text-secondary);
+  font-weight: 600;
+  flex: none;
+  min-width: 56px;
+}
+
+.dr-timeline-text {
+  font-size: 13px;
+}
+
+/* mermaid */
+.dr-mermaid {
+  margin: 8px 0;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.dr-mermaid svg {
+  max-width: 100%;
+}
+
+/* 可排序表头 */
+.dr-th-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.dr-th-sortable:hover {
+  background: var(--dr-bg-subtle);
+}
+
 .dr-md th,
 .dr-md td {
   border: 1px solid var(--dr-border);
@@ -797,6 +941,11 @@
 .dr-ask-submit {
   border-radius: 10px;
   margin-top: 4px;
+}
+
+.dr-ask-submit-row {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* 历史与设置 */

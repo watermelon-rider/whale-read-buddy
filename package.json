@@ -14,12 +14,16 @@
   "dependencies": {
     "defuddle": "^0.19.5",
     "dexie": "^4.0.11",
+    "katex": "^0.19.0",
     "lucide-react": "^1.60.0",
+    "mermaid": "^12.2.0",
     "pdfjs-dist": "^4.10.38",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@types/chrome": "^0.3.5",

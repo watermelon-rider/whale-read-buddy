@@ -3,13 +3,18 @@
  * - 用户消息：协议块隐藏，只显示提问 + 批注 chip（hover 查看）。
  * - 助手消息：Markdown 渲染；reasoning 折叠；Annotation N： 渲染为 hoverable chip。
  */
-import { Children, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Children, isValidElement, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Check, Copy, MessageSquareQuote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import type { AnnotationItem } from '../../types';
 import { REPLY_ANNOTATION_RE, splitAnnotationProtocol } from '../../core/annotation/protocol';
 import { AnnoPopover } from '../shared/AnnoPopover';
+import { CalloutBlockquote, SortableTable, Steps, Timeline } from './markdown/blocks';
+import { Mermaid } from './markdown/Mermaid';
 
 interface AnnoDetail {
   anno: AnnotationItem;
@@ -170,14 +175,41 @@ export function AssistantContent({
       h1: wrap('h1'),
       h2: wrap('h2'),
       h3: wrap('h3'),
+      blockquote: CalloutBlockquote,
+      table: SortableTable,
+      pre: PreBlock,
     };
   }, [replyAnnotations, onShowDetail]);
 
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[[rehypeKatex, { strict: false }]]}
+      components={components}
+    >
       {content}
     </ReactMarkdown>
   );
+}
+
+/** pre 覆写：mermaid / steps / timeline 围栏走自定义渲染，其余保持默认。 */
+function PreBlock({ children }: { children?: ReactNode }) {
+  const child = Children.toArray(children)[0];
+  if (isValidElement(child)) {
+    const props = child.props as { className?: string; children?: ReactNode };
+    const lang = props.className?.match(/language-(\w+)/)?.[1];
+    const code = textOf(props.children);
+    if (lang === 'mermaid') return <Mermaid code={code} />;
+    if (lang === 'steps') return <Steps code={code} />;
+    if (lang === 'timeline') return <Timeline code={code} />;
+  }
+  return <pre>{children}</pre>;
+}
+
+function textOf(node: ReactNode): string {
+  return Children.toArray(node)
+    .map((c) => (typeof c === 'string' ? c : ''))
+    .join('');
 }
 
 export interface DisplayMessage {
