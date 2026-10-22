@@ -71,7 +71,7 @@ export function SettingsView({ conversationId, onBack }: Props) {
           <div className="dr-settings-heading">人设与提示词</div>
           <div className="dr-settings-card">
             <label className="dr-field">
-              <span>人设（留空用默认）</span>
+              <span>人设</span>
               <textarea
                 rows={4}
                 value={settings.persona}

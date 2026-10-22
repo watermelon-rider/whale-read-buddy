@@ -33,6 +33,7 @@ interface Props {
   running: boolean;
   modelChoice: ModelChoice;
   contextUsage: ContextUsage | null;
+  compacting: boolean;
   onCompact: () => void;
   onQuestionChange: (q: string) => void;
   onAnnotationsChange: (items: AnnotationItem[]) => void;
@@ -196,7 +197,11 @@ export function Composer(props: Props) {
       />
       <div className="dr-composer-footer">
         <div className="dr-footer-left">
-          <ContextRing usage={props.contextUsage} onCompact={props.onCompact} />
+          <ContextRing
+            usage={props.contextUsage}
+            compacting={props.compacting}
+            onCompact={props.onCompact}
+          />
         </div>
         <div className="dr-footer-right">
           <div className="dr-model-anchor" ref={modelAnchorRef}>

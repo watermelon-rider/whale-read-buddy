@@ -100,7 +100,9 @@ function toDisplayItems(events: SessionEvent[]): DisplayItem[] {
           icon: Wrench,
           text: e.data.isError
             ? `大肥鱼想用 ${e.data.name}，但没成功`
-            : `大肥鱼用 ${e.data.name} 查完啦`,
+            : e.data.name === 'ask_user'
+              ? '大肥鱼点点头'
+              : `大肥鱼用 ${e.data.name} 查完啦`,
         });
         break;
       case 'compaction/summary':

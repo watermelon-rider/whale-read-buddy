@@ -14,12 +14,14 @@ export interface ContextUsage {
 interface Props {
   usage: ContextUsage | null;
   onCompact: () => void;
+  /** 压缩进行中：进度环不可点击。 */
+  compacting: boolean;
 }
 
 const R = 7;
 const CIRC = 2 * Math.PI * R;
 
-export function ContextRing({ usage, onCompact }: Props) {
+export function ContextRing({ usage, onCompact, compacting }: Props) {
   const [confirming, setConfirming] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -42,6 +44,7 @@ export function ContextRing({ usage, onCompact }: Props) {
     <div className="dr-ring-anchor" ref={rootRef}>
       <button
         className="dr-ring-btn"
+        disabled={compacting}
         title={`上下文占用约 ${pct}%（${tokensK} tokens）`}
         onClick={() => setConfirming((v) => !v)}
       >
@@ -62,11 +65,7 @@ export function ContextRing({ usage, onCompact }: Props) {
       </button>
       {confirming && (
         <div className="dr-ring-pop">
-          <div className="dr-ring-pop-text">
-            上下文占用约 {pct}%（{tokensK} / {(usage.window / 1000).toFixed(0)}K tokens）
-            {usage.compacted ? '，之前已压缩过' : ''}。
-          </div>
-          <div className="dr-ring-pop-text">要现在压缩上下文吗？较早的对话会被摘要。</div>
+          <div className="dr-ring-pop-text">上下文占用约 {pct}%。要现在压缩上下文吗？</div>
           <div className="dr-ring-pop-row">
             <button className="dr-icon-btn" onClick={() => setConfirming(false)}>
               取消

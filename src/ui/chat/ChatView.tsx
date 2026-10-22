@@ -49,6 +49,7 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
   const [askUser, setAskUser] = useState<{ requestId: string; questions: AskUserQuestion[] } | null>(null);
   const [title, setTitle] = useState(conversation.title);
   const [contextUsage, setContextUsage] = useState<ContextUsage | null>(null);
+  const [compacting, setCompacting] = useState(false);
   const conversationIdRef = useRef(conversation.id);
   conversationIdRef.current = conversation.id;
 
@@ -241,11 +242,13 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
         running={turn.running}
         modelChoice={modelChoice}
         contextUsage={contextUsage}
-        onCompact={() =>
-          void request({ kind: 'compactNow', conversationId: conversation.id }).then(
-            refreshContextUsage,
-          )
-        }
+        compacting={compacting}
+        onCompact={() => {
+          setCompacting(true);
+          void request({ kind: 'compactNow', conversationId: conversation.id })
+            .then(refreshContextUsage)
+            .finally(() => setCompacting(false));
+        }}
         onQuestionChange={setQuestion}
         onAnnotationsChange={setAnnotations}
         onModelChoiceChange={(c) => void handleModelChoiceChange(c)}

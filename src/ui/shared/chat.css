@@ -129,6 +129,12 @@
   background: #efeff1;
 }
 
+.dr-ring-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  background: transparent;
+}
+
 .dr-ring-pop {
   position: absolute;
   bottom: calc(100% + 8px);
@@ -185,10 +191,11 @@
 
 .dr-msg-assistant .dr-md {
   font-size: 14px;
+  line-height: 1.92;
 }
 
 .dr-md p {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
 }
 
 .dr-md pre {
