@@ -57,7 +57,7 @@ export function Mermaid({ code }: { code: string }) {
     );
   }
   return (
-    <Zoomable label="放大流程图">
+    <Zoomable label="投到浏览器窗口查看" copyText={code}>
       <div className="dr-mermaid" dangerouslySetInnerHTML={{ __html: svg }} />
     </Zoomable>
   );

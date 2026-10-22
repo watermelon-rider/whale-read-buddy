@@ -74,7 +74,7 @@ export function CalloutBlockquote({ children }: { children?: ReactNode }) {
 export function Steps({ code }: { code: string }) {
   const rows = code.trim().split('\n').filter((l) => l.trim().length > 0);
   return (
-    <Zoomable label="放大步骤">
+    <Zoomable label="投到浏览器窗口查看" copyText={code}>
       <div className="dr-steps">
       {rows.map((row, i) => {
         const [title, ...rest] = row.split('|');
@@ -97,7 +97,7 @@ export function Steps({ code }: { code: string }) {
 export function Timeline({ code }: { code: string }) {
   const rows = code.trim().split('\n').filter((l) => l.trim().length > 0);
   return (
-    <Zoomable label="放大时间线">
+    <Zoomable label="投到浏览器窗口查看" copyText={code}>
       <div className="dr-timeline">
         {rows.map((row, i) => {
           const [time, ...rest] = row.split('|');
@@ -161,7 +161,7 @@ export function SortableTable({ children }: { children?: ReactNode }) {
   }, [children]);
 
   return (
-    <Zoomable label="放大表格">
+    <Zoomable label="投到浏览器窗口查看">
       <table ref={ref}>{children}</table>
     </Zoomable>
   );

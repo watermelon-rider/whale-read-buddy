@@ -51,7 +51,8 @@ function Viewer() {
   const onWheel = (e: WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      applyScale(scale + (e.deltaY < 0 ? 0.1 : -0.1));
+      // 低灵敏度：每档 5%
+      applyScale(scale + (e.deltaY < 0 ? 0.05 : -0.05));
     }
   };
 
@@ -76,7 +77,7 @@ function Viewer() {
         >
           <div
             ref={contentRef}
-            className="dr-zoom-inner dr-md"
+            className="dr-viewer-content dr-md"
             style={{ transform: `translateX(-50%) scale(${scale})`, transformOrigin: 'top center' }}
             dangerouslySetInnerHTML={{ __html: html }}
           />

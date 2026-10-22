@@ -21,7 +21,7 @@ function renderTex(tex: string, displayMode: boolean): string {
 export function MathBlock({ tex }: { tex: string }) {
   const html = useMemo(() => renderTex(tex, true), [tex]);
   return (
-    <Zoomable label="放大公式">
+    <Zoomable label="投到浏览器窗口查看" copyText={tex}>
       <div className="dr-math-block" dangerouslySetInnerHTML={{ __html: html }} />
     </Zoomable>
   );
