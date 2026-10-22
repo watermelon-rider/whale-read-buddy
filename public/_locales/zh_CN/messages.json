@@ -1,5 +1,5 @@
 {
-  "appName": { "message": "WhaleRead Buddy" },
+  "appName": { "message": "大肥鱼陪读" },
   "appDesc": { "message": "读取当前页面内容，与 DeepSeek 对话深入学习，支持划词批注与主动搜索。" },
-  "openTitle": { "message": "打开 WhaleRead Buddy" }
+  "openTitle": { "message": "打开大肥鱼陪读" }
 }
