@@ -4,6 +4,7 @@
  */
 import { Children, isValidElement, useEffect, useRef, type ReactNode } from 'react';
 import { AlertTriangle, Info, Lightbulb } from 'lucide-react';
+import { Zoomable } from './Zoomable';
 
 /** 从 children 中提取第一个字符串文本（递归）。 */
 function firstText(children: ReactNode): string {
@@ -73,7 +74,8 @@ export function CalloutBlockquote({ children }: { children?: ReactNode }) {
 export function Steps({ code }: { code: string }) {
   const rows = code.trim().split('\n').filter((l) => l.trim().length > 0);
   return (
-    <div className="dr-steps">
+    <Zoomable label="放大步骤">
+      <div className="dr-steps">
       {rows.map((row, i) => {
         const [title, ...rest] = row.split('|');
         return (
@@ -86,7 +88,8 @@ export function Steps({ code }: { code: string }) {
           </div>
         );
       })}
-    </div>
+      </div>
+    </Zoomable>
   );
 }
 
@@ -94,18 +97,20 @@ export function Steps({ code }: { code: string }) {
 export function Timeline({ code }: { code: string }) {
   const rows = code.trim().split('\n').filter((l) => l.trim().length > 0);
   return (
-    <div className="dr-timeline">
-      {rows.map((row, i) => {
-        const [time, ...rest] = row.split('|');
-        return (
-          <div key={i} className="dr-timeline-item">
-            <div className="dr-timeline-dot" />
-            <div className="dr-timeline-time">{time?.trim()}</div>
-            <div className="dr-timeline-text">{rest.join('|').trim()}</div>
-          </div>
-        );
-      })}
-    </div>
+    <Zoomable label="放大时间线">
+      <div className="dr-timeline">
+        {rows.map((row, i) => {
+          const [time, ...rest] = row.split('|');
+          return (
+            <div key={i} className="dr-timeline-item">
+              <div className="dr-timeline-dot" />
+              <div className="dr-timeline-time">{time?.trim()}</div>
+              <div className="dr-timeline-text">{rest.join('|').trim()}</div>
+            </div>
+          );
+        })}
+      </div>
+    </Zoomable>
   );
 }
 
@@ -155,5 +160,9 @@ export function SortableTable({ children }: { children?: ReactNode }) {
     return () => handlers.forEach(([th, fn]) => th.removeEventListener('click', fn));
   }, [children]);
 
-  return <table ref={ref}>{children}</table>;
+  return (
+    <Zoomable label="放大表格">
+      <table ref={ref}>{children}</table>
+    </Zoomable>
+  );
 }

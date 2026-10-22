@@ -366,6 +366,77 @@
   background: var(--dr-bg-subtle);
 }
 
+/* 放大查看 */
+.dr-zoomable {
+  position: relative;
+}
+
+.dr-zoom-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 5;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid var(--dr-border);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--dr-text-secondary);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.dr-zoomable:hover .dr-zoom-btn {
+  display: inline-flex;
+}
+
+.dr-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dr-zoom-content {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 90vw;
+  max-height: 86vh;
+  overflow: auto;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+}
+
+.dr-zoom-content .dr-zoom-btn {
+  display: none;
+}
+
+.dr-zoom-close {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--dr-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dr-math-block {
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
 .dr-md th,
 .dr-md td {
   border: 1px solid var(--dr-border);

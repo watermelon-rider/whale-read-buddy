@@ -8,13 +8,13 @@ import { Check, Copy, MessageSquareQuote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import type { AnnotationItem } from '../../types';
 import { REPLY_ANNOTATION_RE, splitAnnotationProtocol } from '../../core/annotation/protocol';
 import { AnnoPopover } from '../shared/AnnoPopover';
 import { CalloutBlockquote, SortableTable, Steps, Timeline } from './markdown/blocks';
 import { Mermaid } from './markdown/Mermaid';
+import { MathBlock, MathInline } from './markdown/Math';
 
 interface AnnoDetail {
   anno: AnnotationItem;
@@ -178,18 +178,26 @@ export function AssistantContent({
       blockquote: CalloutBlockquote,
       table: SortableTable,
       pre: PreBlock,
+      code: CodeInline,
     };
   }, [replyAnnotations, onShowDetail]);
 
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[[rehypeKatex, { strict: false }]]}
       components={components}
     >
       {content}
     </ReactMarkdown>
   );
+}
+
+/** code 覆写：行内公式（math-inline）走 KaTeX，其余保持默认。 */
+function CodeInline({ className, children }: { className?: string; children?: ReactNode }) {
+  if (className?.includes('math-inline')) {
+    return <MathInline tex={textOf(children)} />;
+  }
+  return <code className={className}>{children}</code>;
 }
 
 /** pre 覆写：mermaid / steps / timeline 围栏走自定义渲染，其余保持默认。 */
@@ -199,6 +207,7 @@ function PreBlock({ children }: { children?: ReactNode }) {
     const props = child.props as { className?: string; children?: ReactNode };
     const lang = props.className?.match(/language-(\w+)/)?.[1];
     const code = textOf(props.children);
+    if (props.className?.includes('math-display')) return <MathBlock tex={code} />;
     if (lang === 'mermaid') return <Mermaid code={code} />;
     if (lang === 'steps') return <Steps code={code} />;
     if (lang === 'timeline') return <Timeline code={code} />;
