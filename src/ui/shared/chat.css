@@ -411,8 +411,18 @@
 .dr-mermaid .edgeLabel .label,
 .dr-mermaid .edgeLabel text,
 .dr-mermaid .edgeLabel foreignObject div {
-  color: #6b7280 !important;
+  color: #1f2329 !important;
   background: #fff !important;
+}
+
+/* 兜底：浅色底上禁止浅色字——Mermaid 里所有文本一律深色 */
+.dr-mermaid svg text {
+  fill: #1f2329 !important;
+}
+
+.dr-mermaid svg foreignObject,
+.dr-mermaid svg foreignObject * {
+  color: #1f2329 !important;
 }
 
 /* 时序图：参与者蓝、生命线灰、便签琥珀 */
