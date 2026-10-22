@@ -223,7 +223,11 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
       />
       {turn.running && (
         <div className="dr-status">
-          {turn.toolNames ? `大肥鱼翻书中（${turn.toolNames.join('、')}）…` : '大肥鱼干饭中…'}
+          {turn.toolNames?.includes('ask_user')
+            ? '大肥鱼在等你回复…'
+            : turn.toolNames
+              ? `大肥鱼翻书中（${turn.toolNames.join('、')}）…`
+              : '大肥鱼干饭中…'}
         </div>
       )}
       {compacting && <div className="dr-status">大肥鱼正在压缩对话…</div>}
