@@ -1,5 +1,6 @@
 /**
  * core/ 纯逻辑单元测试：会话投影、批注协议、搜索合并、截断、工具校验。
+ * 改动 core/ 行为时先跑这里。
  */
 import { describe, expect, it } from 'vitest';
 import { Session, composeUserText, repairDanglingToolCalls } from '../src/core/session/session';

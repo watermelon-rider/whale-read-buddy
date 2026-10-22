@@ -1,4 +1,5 @@
 {
+  // 继承 WXT 生成的 .wxt/tsconfig.json（先 wxt prepare 再跑 tsc/vitest）。
   "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
     "strict": true,

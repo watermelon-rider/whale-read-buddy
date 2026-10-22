@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "keywords": ["chrome-extension", "deepseek", "reading-companion"],
   "scripts": {
     "dev": "wxt",
     "build": "wxt build",

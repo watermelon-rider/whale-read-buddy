@@ -1,4 +1,4 @@
-/** 跨 context 共享的领域类型。core/ 与 services/、ui/ 都从这里取类型。 */
+/** 跨 context 共享的领域类型。core/ 与 services/、ui/ 都从这里取类型。单一真源。 */
 
 /** 一条划词批注（草稿态与已发送态共用）。 */
 export interface AnnotationItem {

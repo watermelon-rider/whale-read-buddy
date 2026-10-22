@@ -1,5 +1,6 @@
 import { defineConfig } from 'wxt';
 
+// WXT 主配置：manifest、权限、入口都在此声明。
 export default defineConfig({
   srcDir: 'src',
   modules: ['@wxt-dev/module-react'],

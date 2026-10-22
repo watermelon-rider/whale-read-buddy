@@ -1,6 +1,6 @@
 # 构建并打包 Chrome 扩展。
-# - push 到 main / PR：跑测试 + 构建 + 上传 zip artifact（7 天保留）。
-# - 打 v* tag：创建 GitHub Release 并挂上可直接安装的 zip。
+# push 到 main / PR：跑测试 + 构建 + 上传 zip artifact（7 天保留）。
+# 打 v* tag：创建 GitHub Release 并挂上可直接安装的 zip。
 name: build
 
 on:

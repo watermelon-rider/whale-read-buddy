@@ -1,3 +1,4 @@
+# pnpm 11 的构建设置（依赖安装脚本白名单）。
 allowBuilds:
   esbuild: true
   spawn-sync: false
