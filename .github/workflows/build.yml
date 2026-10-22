@@ -30,6 +30,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # .wxt/tsconfig.json 是生成物（被 gitignore），先 prepare 才能跑测试和类型检查。
+      - name: WXT prepare
+        run: pnpm exec wxt prepare
+
       - name: Unit tests
         run: pnpm test
 
