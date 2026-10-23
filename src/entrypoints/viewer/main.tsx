@@ -8,8 +8,24 @@ import '../../ui/shared/theme.css';
 import '../../ui/shared/chat.css';
 import 'katex/dist/katex.min.css';
 import { t } from '../../i18n';
+import { PlotView } from '../../ui/viewer/PlotView';
 
+/** 根组件按 mode 分流，避免条件 hooks。 */
 function Viewer() {
+  const params = new URLSearchParams(location.search);
+  const mode = params.get('mode');
+  const key = params.get('key') ?? '';
+  if (mode === 'plot') {
+    return (
+      <div className="dr-viewer">
+        <PlotView plotKey={key} />
+      </div>
+    );
+  }
+  return <HtmlViewer storageKey={key} />;
+}
+
+function HtmlViewer({ storageKey }: { storageKey: string }) {
   const [html, setHtml] = useState('');
   const [scale, setScale] = useState(1);
   const [baseSize, setBaseSize] = useState<{ w: number; h: number } | null>(null);
@@ -17,13 +33,12 @@ function Viewer() {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const key = new URLSearchParams(location.search).get('key');
-    if (!key) return;
-    void chrome.storage.session.get(key).then((raw) => {
-      setHtml((raw[key] as string) ?? `<p>${t('viewerExpired')}</p>`);
-      void chrome.storage.session.remove(key);
+    if (!storageKey) return;
+    void chrome.storage.session.get(storageKey).then((raw) => {
+      setHtml((raw[storageKey] as string) ?? `<p>${t('viewerExpired')}</p>`);
+      void chrome.storage.session.remove(storageKey);
     });
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
     if (!html) return;

@@ -106,6 +106,10 @@ export const messages = {
     calloutImportant: '重要',
     calloutWarning: '警告',
     openInWindow: '投到浏览器窗口查看',
+    plotFunction: '看函数图像',
+    plotNotPlottable: '这个公式画不成二维函数图像（只有单变量函数可以画）。',
+    plotInputPlaceholder: '输入 x 值',
+    plotMark: '标点',
     viewerExpired: '内容已过期，请重新放大。',
 
     // ---- 提示词侧（发给模型的文本） ----
@@ -251,6 +255,10 @@ export const messages = {
     calloutImportant: 'Important',
     calloutWarning: 'Warning',
     openInWindow: 'Open in a browser window',
+    plotFunction: 'Plot as function',
+    plotNotPlottable: 'This formula cannot be plotted as a 2D function (only single-variable functions can).',
+    plotInputPlaceholder: 'Enter an x value',
+    plotMark: 'Mark',
     viewerExpired: 'Content expired. Please open it again.',
 
     // ---- 提示词侧 ----

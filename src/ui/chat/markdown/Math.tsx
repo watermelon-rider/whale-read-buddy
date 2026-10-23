@@ -22,7 +22,7 @@ function renderTex(tex: string, displayMode: boolean): string {
 export function MathBlock({ tex }: { tex: string }) {
   const html = useMemo(() => renderTex(tex, true), [tex]);
   return (
-    <Zoomable label={t('openInWindow')} copyText={tex}>
+    <Zoomable label={t('openInWindow')} copyText={tex} plotTex={tex}>
       <div className="dr-math-block" dangerouslySetInnerHTML={{ __html: html }} />
     </Zoomable>
   );
