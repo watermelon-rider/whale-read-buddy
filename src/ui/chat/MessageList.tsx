@@ -236,6 +236,77 @@ export function MessageList({
   };
 
   // 对话内批注的引用高亮：在对应消息元素里精确匹配 quote 并画高亮 + 蓝色角标。
+  // 支持跨文本节点（KaTeX 公式、链接、加粗都会把文字切碎）。
+  const wrapQuoteInElement = (msgEl: Element, a: AnnotationItem): boolean => {
+    const quote = a.quote;
+    const index = a.index;
+    const walker = document.createTreeWalker(msgEl, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    const starts: number[] = [];
+    let full = '';
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      const t = node as Text;
+      starts.push(full.length);
+      full += t.data;
+      nodes.push(t);
+    }
+
+    let at = full.indexOf(quote);
+    let matchEnd = at + quote.length;
+    if (at === -1) {
+      // 公式/富文本里选区常带不规则空白：折叠空白后兜底匹配，再映射回原文区间。
+      const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
+      const nq = norm(quote);
+      const normStarts: number[] = [];
+      let normFull = '';
+      for (const ch of full) {
+        if (/\s/.test(ch)) {
+          if (normFull.endsWith(' ')) continue;
+        }
+        normStarts.push(normFull.length);
+        normFull += /\s/.test(ch) ? ' ' : ch;
+      }
+      const nat = normFull.indexOf(nq);
+      if (nat === -1) return false;
+      at = normStarts[nat] ?? -1;
+      matchEnd = normStarts[nat + nq.length - 1] !== undefined ? (normStarts[nat + nq.length - 1] as number) + 1 : -1;
+      if (at < 0 || matchEnd < 0) return false;
+    }
+
+    let wrapped = 0;
+    let lastSpan: HTMLElement | null = null;
+    for (let i = 0; i < nodes.length; i++) {
+      const t = nodes[i]!;
+      const ns = starts[i]!;
+      const ne = ns + t.data.length;
+      const segStart = Math.max(at, ns);
+      const segEnd = Math.min(matchEnd, ne);
+      if (segStart >= segEnd) continue;
+      const localStart = segStart - ns;
+      const localEnd = segEnd - ns;
+      const target = localStart > 0 ? t.splitText(localStart) : t;
+      if (localEnd < target.data.length) target.splitText(localEnd);
+      const mark = document.createElement('span');
+      mark.className = 'dr-chat-anno-mark';
+      target.parentNode?.replaceChild(mark, target);
+      mark.appendChild(target);
+      lastSpan = mark;
+      wrapped++;
+    }
+    if (wrapped === 0 || !lastSpan) return false;
+    const badge = document.createElement('span');
+    badge.className = 'dr-chat-anno-badge';
+    badge.textContent = String(index);
+    badge.title = t('viewNote');
+    badge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setAnnoDetail({ anno: a, rect: badge.getBoundingClientRect() });
+    });
+    lastSpan.after(badge);
+    return true;
+  };
+
   useEffect(() => {
     const container = marksRef.current;
     if (!container) return;
@@ -252,30 +323,7 @@ export function MessageList({
       if (a.source.kind !== 'chat') continue;
       const msgEl = container.querySelector(`[data-message-id="${a.source.messageId}"]`);
       if (!msgEl) continue;
-      const walker = document.createTreeWalker(msgEl, NodeFilter.SHOW_TEXT);
-      let node: Node | null;
-      let done = false;
-      while ((node = walker.nextNode()) && !done) {
-        const textNode = node as Text;
-        const at = textNode.data.indexOf(a.quote);
-        if (at === -1) continue;
-        const target = textNode.splitText(at);
-        target.splitText(a.quote.length);
-        const mark = document.createElement('span');
-        mark.className = 'dr-chat-anno-mark';
-        target.parentNode?.replaceChild(mark, target);
-        mark.appendChild(target);
-        const badge = document.createElement('span');
-        badge.className = 'dr-chat-anno-badge';
-        badge.textContent = String(a.index);
-        badge.title = t('viewNote');
-        badge.addEventListener('click', (e) => {
-          e.stopPropagation();
-          setAnnoDetail({ anno: a, rect: badge.getBoundingClientRect() });
-        });
-        mark.after(badge);
-        done = true;
-      }
+      wrapQuoteInElement(msgEl, a);
     }
   }, [draftAnnotations, items]);
 
