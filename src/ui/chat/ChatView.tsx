@@ -228,6 +228,13 @@ export function ChatView({ conversation, onNew, onOpenHistory, onOpenSettings }:
         onAnswerPendingAsk={(toolCallId, answers) =>
           void request({ kind: 'answerPendingAsk', conversationId: conversation.id, toolCallId, answers })
         }
+        onEditAnnotation={(index, note) =>
+          setAnnotations((prev) =>
+            note === null
+              ? prev.filter((a) => a.index !== index).map((a, i) => ({ ...a, index: i + 1 }))
+              : prev.map((a) => (a.index === index ? { ...a, note } : a)),
+          )
+        }
       />
       {turn.running && (
         <div className="dr-status">

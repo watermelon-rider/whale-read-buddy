@@ -55,6 +55,7 @@ export const messages = {
     noNote: '（无）',
     annotationMarkerTitle: '批注 #{n}（未发送）',
     viewNote: '查看批注',
+    editNote: '编辑批注',
 
     // 提问卡片
     askTitle: '大肥鱼想问你：',
@@ -205,6 +206,7 @@ export const messages = {
     noNote: '(none)',
     annotationMarkerTitle: 'Note #{n} (unsent)',
     viewNote: 'View note',
+    editNote: 'Edit note',
 
     askTitle: 'WhaleBuddy asks:',
     askCustomPlaceholder: 'Or type another answer…',

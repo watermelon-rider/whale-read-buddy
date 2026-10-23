@@ -30,6 +30,8 @@ interface Props {
   onAnswerAsk?: (requestId: string, answers: Record<string, string>) => void;
   /** 补答历史遗留提问（原回合已结束，补答会开启新一轮对话）。 */
   onAnswerPendingAsk?: (toolCallId: string, answers: Record<string, string>) => void;
+  /** 编辑/删除草稿批注（note 为 null 表示删除）。 */
+  onEditAnnotation?: (index: number, note: string | null) => void;
 }
 
 /** 每个会话记住滚动位置：切视图/重开面板都直接定位，不播回底动画。
@@ -169,6 +171,7 @@ export function MessageList({
   liveAsk,
   onAnswerAsk,
   onAnswerPendingAsk,
+  onEditAnnotation,
 }: Props) {
   const items = useMemo(() => toDisplayItems(events), [events]);
   const listRef = useRef<HTMLDivElement>(null);
@@ -402,6 +405,14 @@ export function MessageList({
           quote={annoDetail.anno.quote}
           note={annoDetail.anno.note}
           onClose={() => setAnnoDetail(null)}
+          onSaveNote={
+            onEditAnnotation
+              ? (note) => onEditAnnotation(annoDetail.anno.index, note)
+              : undefined
+          }
+          onDelete={
+            onEditAnnotation ? () => onEditAnnotation(annoDetail.anno.index, null) : undefined
+          }
         />
       )}
     </div>
