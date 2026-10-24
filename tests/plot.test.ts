@@ -2,7 +2,7 @@
  * LaTeX → 可绘制函数 的转换与求值测试。
  */
 import { describe, expect, it } from 'vitest';
-import { evalAt, latexToPlottable } from '../src/core/plot/convert';
+import { buildPlotFn, evalAt, latexToPlottable } from '../src/core/plot/convert';
 
 describe('latexToPlottable', () => {
   it('单变量等式（y=…）可取右边并出图表达式', () => {
@@ -51,5 +51,37 @@ describe('evalAt', () => {
 
   it('非法输入返回 null', () => {
     expect(evalAt('x^2', 'x', NaN)).toBeNull();
+  });
+});
+
+describe('行内公式常见写法', () => {
+  it('1/x 可画且在 x=2 处为 0.5', () => {
+    const r = latexToPlottable('\\frac{1}{x}');
+    expect(r.ok).toBe(true);
+    expect(evalAt(r.expr!, r.variable!, 2)).toBeCloseTo(0.5);
+  });
+
+  it('log10(x) 转成可求值表达式，x=10 时约 1', () => {
+    const r = latexToPlottable('\\log_{10} x');
+    expect(r.ok).toBe(true);
+    expect(evalAt(r.expr!, r.variable!, 10)).toBeCloseTo(1, 6);
+  });
+
+  it('纯常数 e / 近似值不可画', () => {
+    expect(latexToPlottable('e').reason).toBe('no-variable');
+    expect(latexToPlottable('0.5').reason).toBe('no-variable');
+  });
+
+  it('x=1 这类竖直线不当作函数画', () => {
+    expect(latexToPlottable('x=1').ok).toBe(false);
+  });
+});
+
+describe('buildPlotFn', () => {
+  it('预编译函数可逐点求值，并与 evalAt 一致', () => {
+    const r = latexToPlottable('\\frac{1}{x}+x^2');
+    const fn = buildPlotFn(r.expr!, r.variable!);
+    expect(fn(2)).toBeCloseTo(4.5);
+    expect(fn(0)).NaN;
   });
 });

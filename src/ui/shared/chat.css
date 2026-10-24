@@ -632,6 +632,38 @@
   overflow-x: auto;
 }
 
+/* 行内公式：悬浮按钮不占位、不改公式排版 */
+.dr-math-inline-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.dr-inline-plot-btn {
+  position: absolute;
+  top: -14px;
+  right: -16px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--dr-border);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--dr-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease-out;
+  padding: 0;
+  z-index: 3;
+}
+
+.dr-math-inline-wrap:hover .dr-inline-plot-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 .dr-md th,
 .dr-md td {
   border: 1px solid var(--dr-border);

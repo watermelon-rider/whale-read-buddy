@@ -8,8 +8,10 @@
  */
 import katex from 'katex';
 import { useMemo } from 'react';
+import { LineChart } from 'lucide-react';
 import { Zoomable } from './Zoomable';
 import { t } from '../../../i18n';
+import { openPlotViewer } from '../../shared/open-plot';
 
 function renderTex(tex: string, displayMode: boolean): string {
   return katex.renderToString(tex, {
@@ -30,5 +32,17 @@ export function MathBlock({ tex }: { tex: string }) {
 
 export function MathInline({ tex }: { tex: string }) {
   const html = useMemo(() => renderTex(tex, false), [tex]);
-  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+  return (
+    // inline-block 只包裹公式本身；按钮绝对定位，不占文档流、不改变公式排版。
+    <span className="dr-math-inline-wrap">
+      <span dangerouslySetInnerHTML={{ __html: html }} />
+      <button
+        className="dr-inline-plot-btn"
+        title={t('plotFunction')}
+        onClick={() => void openPlotViewer(tex)}
+      >
+        <LineChart size={11} strokeWidth={2} />
+      </button>
+    </span>
+  );
 }

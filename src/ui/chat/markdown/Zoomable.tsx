@@ -6,6 +6,7 @@ import { useState, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Check, Copy, ExternalLink, LineChart } from 'lucide-react';
 import { t } from '../../../i18n';
+import { openPlotViewer } from '../../shared/open-plot';
 
 interface Props {
   children: ReactNode;
@@ -28,11 +29,7 @@ export function Zoomable({ children, label, copyText, plotTex }: Props) {
 
   const openPlot = async () => {
     if (!plotTex) return;
-    const key = `plot:${crypto.randomUUID()}`;
-    await chrome.storage.session.set({ [key]: plotTex });
-    await chrome.tabs.create({
-      url: chrome.runtime.getURL(`viewer.html?mode=plot&key=${key}`),
-    });
+    await openPlotViewer(plotTex);
   };
 
   return (

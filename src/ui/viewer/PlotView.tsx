@@ -4,7 +4,12 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import functionPlot from 'function-plot';
-import { evalAt, latexToPlottable, type PlotParseResult } from '../../core/plot/convert';
+import {
+  buildPlotFn,
+  evalAt,
+  latexToPlottable,
+  type PlotParseResult,
+} from '../../core/plot/convert';
 import { t } from '../../i18n';
 
 const PLOT_COLOR = '#4e75df';
@@ -30,15 +35,32 @@ export function PlotView({ plotKey }: { plotKey: string }) {
     if (!parsed?.ok || !parsed.expr || !plotRef.current) return;
     const el = plotRef.current;
     el.innerHTML = '';
+    const fn = buildPlotFn(parsed.expr, parsed.variable!);
     functionPlot({
       target: el,
       width: Math.max(320, el.clientWidth),
       height: Math.max(300, Math.floor(window.innerHeight * 0.6)),
       grid: true,
       data: [
-        { fn: parsed.expr, color: PLOT_COLOR },
+        // 用预编译函数而非字符串：避免 function-plot 自带解析器对 log10/x^-1 等写法的差异。
+        {
+          fn: (scope: Record<string, unknown>) => fn(Number(scope.x)),
+          color: PLOT_COLOR,
+          // 默认 interval 采样器会把函数画成填充矩形；显式用折线采样。
+          graphType: 'polyline' as const,
+          sampler: 'builtIn' as const,
+          nSamples: 800,
+        },
         ...(points.length > 0
-          ? [{ points, fnType: 'points' as const, graphType: 'scatter' as const, color: POINT_COLOR }]
+          ? [
+              {
+                points,
+                fnType: 'points' as const,
+                graphType: 'scatter' as const,
+                color: POINT_COLOR,
+                attr: { r: 6 },
+              },
+            ]
           : []),
       ],
     });

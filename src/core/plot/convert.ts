@@ -48,3 +48,20 @@ export function evalAt(expr: string, variable: string, x: number): number | null
     return null;
   }
 }
+
+/** 预编译成 JS 函数（function-plot 逐点调用，比每次走 nerdamer 求值快得多）。 */
+export function buildPlotFn(expr: string, variable: string): (x: number) => number {
+  try {
+    const fn = nerdamer(expr).buildFunction([variable]);
+    return (x: number) => {
+      try {
+        const value = Number(fn(x));
+        return Number.isFinite(value) ? value : NaN;
+      } catch {
+        return NaN;
+      }
+    };
+  } catch {
+    return () => NaN;
+  }
+}
